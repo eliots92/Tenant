@@ -713,7 +713,8 @@ function route(){
   renderWorkbar();
 
   if(base==="funnel"){ if(!F || F.portal.id!==arg) startFunnel(arg); else renderFunnel(); setTab("#welcome"); return; }
-  F=null;
+  if(base==="triage"){ setTab("#responsibility"); renderTriage(arg); return; }
+  F=null; T=null;
   if(base==="gate"){ setTab("#home"); renderGate(); }
   else if(base==="welcome"){ setTab("#welcome"); renderWelcome(); }
   else if(base==="responsibility"){ setTab("#responsibility"); renderResponsibility(); }
@@ -851,13 +852,109 @@ function renderRespDetail(id){
       <div class="card"><ul class="diy" style="margin:0;padding-left:20px">${item.diy.map(d=>`<li>${esc(d)}</li>`).join("")}</ul></div>`;
   }
   app.innerHTML=html;
-  if(canReport){
-    document.body.style.paddingBottom="100px";
-    const portal=item.report&&portalById(item.report)?item.report:"other";
+  document.body.style.paddingBottom="100px";
+  // The action depends on the verdict. Tenant/shared items run the fix-it
+  // triage (safety check → try the fix → report only if it didn't work).
+  // Landlord items skip DIY and go straight to a request.
+  if(v==="landlord"){
     document.getElementById("actionbar-slot").innerHTML=`<div class="actionbar"><div class="wrap">
       <button class="btn primary block" id="resp-report">📨 Report this to us</button></div></div>`;
-    $("#resp-report").addEventListener("click",()=>navigate("#funnel/"+portal));
+    $("#resp-report").addEventListener("click",()=>startReport(reportPortalFor(item),{note:reportNote(item)}));
+  } else {
+    document.getElementById("actionbar-slot").innerHTML=`<div class="actionbar"><div class="wrap">
+      <button class="btn primary block" id="resp-fix">🧰 Can I fix it? Walk me through →</button></div></div>`;
+    $("#resp-fix").addEventListener("click",()=>navigate("#triage/"+item.id));
   }
+}
+
+/* ============================================================================
+   FIX-IT TRIAGE — the filter. Given an issue, decide early whether the resident
+   can resolve it themselves; if not, hand off to the report funnel.
+     1) Safety check   — hazard now?  → Emergency help (call, then report)
+     2) Try the fix    — show the DIY step(s); "did that fix it?"
+          · Fixed      → done, no request needed
+          · Not fixed  → report funnel, pre-noted with the self-help context
+   ========================================================================== */
+const RESP_HAZARD = {
+  "hvac-system":"a gas smell or a burning smell",
+  "plumbing-fixtures":"water flooding, or you can't shut it off",
+  "drain-clogs":"sewage backing up or water overflowing onto the floor",
+  "appliances":"sparking, smoke, or a gas smell",
+  "light-bulbs":"sparking, a burning smell, or a hot fixture",
+  "outlets-switches":"sparking, a burning smell, or a hot outlet or panel",
+  "roof-exterior":"a ceiling sagging or water actively pouring in",
+  "windows-doors":"broken glass, or the home won't lock or secure",
+  "smoke-detectors":"a real fire, or you smell smoke or gas"
+};
+function reportPortalFor(item){ return item.report&&portalById(item.report)?item.report:"other"; }
+function reportNote(item){ return `Reported from “${item.name}” in Who fixes this?`; }
+
+let T=null;
+function renderTriage(id){
+  const item=respById(id); if(!item){ navigate("#responsibility"); return; }
+  if(!T || T.id!==id){ T={ id, phase: RESP_HAZARD[id] ? "safety" : "fix" }; }
+  const total = RESP_HAZARD[id] ? 2 : 1;
+  const pos = T.phase==="safety" ? 1 : total;
+  const pct = Math.round(pos/total*100);
+  const header = `<div class="funnel-h"><span class="resp-ic" style="width:40px;height:40px;font-size:20px">${item.icon}</span>
+      <div><div style="font-weight:600;font-family:var(--serif);font-size:17px">${esc(item.name)}</div>
+      <div class="small muted">Let's see if you can fix it</div></div></div>
+    <div class="prog-label"><span>Step ${pos} of ${total}</span><span class="pct">${pct}%</span></div>
+    <div class="prog"><span style="width:${pct}%"></span></div>`;
+
+  if(T.phase==="safety"){
+    app.innerHTML=`${header}
+      <div class="q">First — a quick safety check</div>
+      <div class="card lc" style="border-left-color:var(--emergency);margin-bottom:18px">
+        <div style="font-weight:600">Right now, is there ${esc(RESP_HAZARD[id])}?</div></div>
+      <div class="opts">
+        <button class="opt round" data-a="yes" style="border-color:var(--emergency)"><span class="chk" style="background:var(--emergency);border-color:var(--emergency)">!</span><span>Yes — that's happening now</span></button>
+        <button class="opt round" data-a="no"><span class="chk"></span><span>No, nothing like that</span></button>
+      </div>`;
+    document.body.style.paddingBottom="100px";
+    document.getElementById("actionbar-slot").innerHTML=`<div class="actionbar"><div class="wrap">
+      <button class="btn back" id="t-back">‹ Back</button></div></div>`;
+    $("#t-back").addEventListener("click",()=>{ T=null; navigate("#resp/"+id); });
+    app.querySelector('[data-a="yes"]').addEventListener("click",()=>{ T=null; navigate("#emergency"); });
+    app.querySelector('[data-a="no"]').addEventListener("click",()=>{ T.phase="fix"; renderTriage(id); });
+    window.scrollTo(0,0); return;
+  }
+
+  // phase: fix — show the DIY steps, then ask whether it worked
+  const steps=(item.diy&&item.diy.length)?item.diy:["Take a quick look and try the obvious fix."];
+  app.innerHTML=`${header}
+    <div class="q">Try this first</div>
+    <div class="card"><ol class="steps">${steps.map(d=>`<li><div class="st">${esc(d)}</div></li>`).join("")}</ol></div>
+    <div class="sec"><h2>Did that fix it?</h2></div>
+    <div class="opts">
+      <button class="opt round" data-a="fixed"><span class="chk">✓</span><span>Yes — all set 🎉</span></button>
+      <button class="opt round" data-a="report"><span class="chk"></span><span>No, it's still not right</span></button>
+      <button class="opt round" data-a="na"><span class="chk"></span><span>This doesn't apply to my problem</span></button>
+    </div>`;
+  document.body.style.paddingBottom="100px";
+  document.getElementById("actionbar-slot").innerHTML=`<div class="actionbar"><div class="wrap">
+    <button class="btn back" id="t-back">‹ Back</button></div></div>`;
+  $("#t-back").addEventListener("click",()=>{ if(RESP_HAZARD[id]){ T.phase="safety"; renderTriage(id); } else { T=null; navigate("#resp/"+id); } });
+  app.querySelector('[data-a="fixed"]').addEventListener("click",()=>{ T=null; renderTriageWin(item); });
+  const toReport=(why)=>{ T=null; startReport(reportPortalFor(item),{ note:`${reportNote(item)} — tried the self-help fix, ${why}.` }); };
+  app.querySelector('[data-a="report"]').addEventListener("click",()=>toReport("still not resolved"));
+  app.querySelector('[data-a="na"]').addEventListener("click",()=>toReport("didn't fit the problem"));
+  window.scrollTo(0,0);
+}
+function renderTriageWin(item){
+  app.innerHTML=`<div class="hero" style="text-align:center;margin-top:40px">
+      <div class="celeb-check" style="margin:0 auto 18px">✓</div>
+      <h1 style="font-size:34px">Nice — you fixed it</h1>
+      <div class="q2" style="font-style:italic">No maintenance request needed.</div>
+      <div class="small muted sub" style="margin-left:auto;margin-right:auto">Glad that did the trick. If it comes back or something else pops up, we're one tap away.</div>
+    </div>`;
+  document.body.style.paddingBottom="100px";
+  document.getElementById("actionbar-slot").innerHTML=`<div class="actionbar"><div class="wrap">
+    <button class="btn back" id="w-home">Home</button>
+    <button class="btn primary block" id="w-report">Still not right? Report it</button></div></div>`;
+  $("#w-home").addEventListener("click",()=>navigate("#home"));
+  $("#w-report").addEventListener("click",()=>startReport(reportPortalFor(item),{note:reportNote(item)}));
+  window.scrollTo(0,0);
 }
 
 /* ============================================================================
@@ -915,6 +1012,10 @@ function buildSteps(portal){
   ];
   return spec.concat(tail);
 }
+/* When a report is started from the fix-it triage, we seed the funnel with a
+   note (and optional urgency) so the manager sees the self-help context. */
+let pendingPrefill=null;
+function startReport(portalId, prefill){ pendingPrefill=prefill||null; navigate("#funnel/"+portalId); }
 function startFunnel(id){
   const portal=portalById(id); if(!portal){ navigate("#welcome"); return; }
   const c=curProp();
@@ -922,6 +1023,12 @@ function startFunnel(id){
       ctx:{ answers:{}, hazard:false, urgency:null, flags:[], habitability:false, photos:[],
             location:{property:currentProperty, unitArea:unitLabel()}, description:"",
             contact:{ name:(RESIDENT&&RESIDENT.name)||"", phone:"", email:"" } } };
+  if(pendingPrefill){
+    if(pendingPrefill.note) F.ctx.description=pendingPrefill.note;
+    if(pendingPrefill.urgency) raiseUrgency(pendingPrefill.urgency);
+    if(pendingPrefill.hazard) F.ctx.hazard=true;
+    pendingPrefill=null;
+  }
   renderFunnel();
 }
 function visibleSteps(){ return F.steps.filter(s=>!s.when||s.when(F.ctx)); }
