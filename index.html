@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#16333D">
+<title>Silver Star Capital — Resident Portal</title>
+<style>
+:root{
+  --ink:#16333D; --ink2:#204a58; --sage:#8FB99F; --sage-d:#4f7d63; --sage-tint:#eaf3ee;
+  --bg:#F4F1EA; --surface:#ffffff; --line:#e5e1d6; --line2:#d8d3c6;
+  --text:#1b2429; --muted:#6b7580;
+  --emergency:#c0392b; --urgent:#d97706; --soon:#2f6f9f; --routine:#7c8794; --ok:#2f855a;
+  --tenant:#4f7d63; --landlord:#2f6f9f; --shared:#8a6d3b;
+  --radius:16px; --shadow:0 1px 3px rgba(22,51,61,.08),0 1px 2px rgba(22,51,61,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%}
+body{padding-bottom:88px;min-height:100vh}
+.wrap{max-width:640px;margin:0 auto;padding:0 16px}
+h1,h2,h3{margin:0}
+button{font:inherit;color:inherit}
+input,select,textarea{font:inherit}
+a{color:var(--ink)}
+
+/* Header */
+.topbar{position:sticky;top:0;z-index:20;background:var(--ink);color:#fff}
+.topbar .wrap{display:flex;align-items:center;gap:12px;height:60px}
+.logo{width:36px;height:36px;border:0;padding:0;font-family:inherit;border-radius:9px;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;letter-spacing:-1px;flex:0 0 auto;box-shadow:0 0 0 1px rgba(255,255,255,.12)}
+.logo b{color:var(--sage);font-weight:800}
+#hlogo{width:40px;height:40px;cursor:pointer}
+#brand-home{cursor:pointer;background:none;border:0;color:inherit;-webkit-tap-highlight-color:transparent}
+#hlogo:active,#brand-home:active{opacity:.65}
+.brand{font-weight:800;font-size:16px;letter-spacing:.2px;line-height:1.1}
+.brand small{display:block;font-weight:500;color:#a9c4b6;font-size:11px;letter-spacing:.4px;margin-top:1px}
+.spacer{flex:1}
+.hbtn{background:var(--emergency);color:#fff;border:0;border-radius:11px;min-height:40px;
+  padding:0 14px;font-weight:800;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.hbtn:active{opacity:.85}
+
+/* "Your home" bar */
+.workbar{background:var(--surface);border-bottom:1px solid var(--line)}
+.workbar .wrap{display:flex;align-items:center;gap:10px;height:48px}
+.workbar .wb-home{font-weight:700;color:var(--ink);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.workbar .wb-home small{color:var(--muted);font-weight:600}
+.workbar .wb-edit{background:none;border:0;color:var(--sage-d);font-weight:800;font-size:13px;cursor:pointer;flex:0 0 auto;padding:6px 2px}
+.workbar .wb-edit:active{opacity:.6}
+
+/* Search */
+.search{width:100%;min-height:50px;border-radius:13px;border:1px solid var(--line2);background:var(--surface);
+  color:var(--text);padding:0 16px;font-size:16px;margin:14px 0 4px;box-shadow:var(--shadow)}
+.search::placeholder{color:var(--muted)}
+
+/* Buttons */
+.btn{min-height:48px;border-radius:13px;border:1px solid var(--line2);background:var(--surface);color:var(--ink);
+  padding:0 16px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;line-height:1;text-decoration:none}
+.btn:hover{border-color:var(--ink)}
+.btn.primary{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn.primary:hover{background:var(--ink2)}
+.btn.danger{background:var(--emergency);border-color:var(--emergency);color:#fff}
+.btn.block{width:100%}
+.btn.sm{min-height:40px;padding:0 13px;font-size:13px;border-radius:11px}
+
+/* Section labels */
+.sec{margin:22px 0 10px;display:flex;align-items:center;gap:9px}
+.sec h2{font-size:12px;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);font-weight:800}
+.sec .spacer{flex:1}
+.dot{width:11px;height:11px;border-radius:4px}
+.sec .sec-ic{font-size:15px;line-height:1}
+
+/* Grids / tiles */
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:11px}
+@media(min-width:520px){.grid{grid-template-columns:repeat(3,1fr)}}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 13px;
+  text-align:left;min-height:86px;cursor:pointer;color:var(--text);display:flex;flex-direction:column;gap:6px;
+  border-top:4px solid var(--line2);box-shadow:var(--shadow)}
+.tile:active{transform:scale(.98)}
+.tile .pname{font-weight:750;font-size:15px;line-height:1.2}
+.tile .pmeta{font-size:11px;color:var(--muted);margin-top:auto}
+.tile.emergency-tile{background:#fdecea;border-top-color:var(--emergency)}
+.tile.emergency-tile .pname{color:var(--emergency)}
+
+/* Big action tiles (home) */
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.act{background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--acc,var(--sage-d));
+  border-radius:var(--radius);padding:16px 14px;min-height:132px;cursor:pointer;color:var(--text);text-align:left;
+  display:flex;flex-direction:column;gap:9px;box-shadow:var(--shadow);transition:transform .12s ease,box-shadow .12s ease}
+.act:active{transform:scale(.97)}
+.act .aic{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:24px;
+  background:color-mix(in srgb,var(--acc) 15%,#fff)}
+.act .atitle{font-weight:800;font-size:16px;line-height:1.15}
+.act .asub{font-size:12px;color:var(--muted);margin-top:auto;line-height:1.3}
+
+/* Cards / rows */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px;
+  margin-bottom:11px;box-shadow:var(--shadow)}
+.card.lc{border-left:4px solid var(--line2)}
+.row{display:flex;gap:11px;align-items:flex-start}
+.badge{font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;padding:3px 8px;border-radius:6px;color:#fff;white-space:nowrap}
+.chip{font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;padding:4px 9px;border-radius:20px;color:#fff}
+.chip.emergency{background:var(--emergency)} .chip.urgent{background:var(--urgent)}
+.chip.soon{background:var(--soon)} .chip.routine{background:var(--routine)}
+.muted{color:var(--muted)} .small{font-size:12px}
+.hazflag{display:inline-block;font-size:10px;font-weight:800;color:#fff;background:var(--emergency);padding:2px 7px;border-radius:5px;margin-right:4px}
+.flagpill{display:inline-block;font-size:10px;font-weight:800;color:var(--ink);background:var(--sage);padding:2px 7px;border-radius:5px;margin-right:4px}
+
+/* Verdict badges (responsibility) */
+.verdict{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;letter-spacing:.3px;
+  text-transform:uppercase;padding:5px 11px;border-radius:20px;color:#fff}
+.verdict.tenant{background:var(--tenant)} .verdict.landlord{background:var(--landlord)} .verdict.shared{background:var(--shared)}
+.resp-tile{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--vc,var(--line2));
+  border-radius:14px;padding:13px 14px;cursor:pointer;box-shadow:var(--shadow);display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.resp-tile:active{transform:scale(.99)}
+.resp-ic{width:40px;height:40px;border-radius:11px;background:var(--sage-tint);display:flex;align-items:center;justify-content:center;font-size:20px;flex:0 0 auto}
+.resp-tile .rt-name{font-weight:750;font-size:15px;line-height:1.2}
+.resp-tile .rt-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.resp-go{color:var(--muted);font-size:22px;margin-left:auto}
+.rr{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.rr:last-child{border-bottom:0}
+.rr .rr-ic{width:30px;flex:0 0 auto;font-size:18px;text-align:center}
+.rr .rr-k{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--muted)}
+.rr .rr-v{font-weight:650;line-height:1.35;margin-top:2px}
+.diy li{margin-bottom:7px;line-height:1.4}
+
+/* Funnel */
+.funnel-h{display:flex;align-items:center;gap:11px;margin:16px 0 4px}
+.prog-label{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:700;color:var(--muted);margin:14px 0 7px}
+.prog-label .pct{color:var(--sage-d);font-weight:800}
+.prog{height:8px;background:var(--line);border-radius:5px;overflow:hidden;margin:0 0 22px}
+.prog>span{display:block;height:100%;background:linear-gradient(90deg,var(--sage),var(--sage-d));border-radius:5px;transition:width .3s ease}
+.q{font-size:23px;font-weight:800;line-height:1.2;margin-bottom:20px;letter-spacing:-.3px}
+.opts{display:flex;flex-direction:column;gap:11px}
+.opt{min-height:58px;border:1.5px solid var(--line2);background:var(--surface);border-radius:14px;padding:0 18px;
+  display:flex;align-items:center;gap:14px;cursor:pointer;font-size:17px;font-weight:600;color:var(--text);box-shadow:var(--shadow)}
+.opt:active{transform:scale(.99)}
+.opt.on{border-color:var(--sage-d);background:var(--sage-tint)}
+.opt .chk{width:22px;height:22px;border-radius:7px;border:2px solid var(--line2);flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:14px;color:#fff}
+.opt.on .chk{background:var(--sage-d);border-color:var(--sage-d)}
+.opt.round .chk{border-radius:50%}
+.sev{min-height:64px;border-radius:14px;border:1.5px solid var(--line2);background:var(--surface);cursor:pointer;
+  display:flex;align-items:center;gap:14px;padding:0 18px;box-shadow:var(--shadow);text-align:left}
+.sev:active{transform:scale(.99)}
+.sev .bar{width:8px;height:34px;border-radius:4px}
+.sev .t{font-size:18px;font-weight:800} .sev .s{font-size:12px;color:var(--muted);font-weight:600}
+label.field{display:block;font-size:13px;color:var(--muted);margin:14px 0 6px;font-weight:700}
+.inp{width:100%;min-height:50px;border:1.5px solid var(--line2);background:var(--surface);color:var(--text);
+  border-radius:13px;padding:12px 15px;font-size:16px}
+.inp:focus{outline:none;border-color:var(--ink)}
+textarea.inp{min-height:110px;resize:vertical}
+.safety-banner{background:var(--emergency);color:#fff;border-radius:14px;padding:16px;font-weight:700;margin-top:16px;line-height:1.35}
+.hide{display:none}
+.toggle{display:flex;gap:10px;margin-top:8px}
+.toggle button{flex:1;min-height:50px;border-radius:12px;border:1.5px solid var(--line2);background:var(--surface);font-weight:700;font-size:15px;cursor:pointer;color:var(--text)}
+.toggle button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.toggle button.danger.on{background:var(--emergency);border-color:var(--emergency);color:#fff}
+
+/* Photos */
+.photo-add{display:flex;flex-wrap:wrap;gap:11px;margin-top:8px}
+.thumb{width:88px;height:88px;border-radius:12px;object-fit:cover;border:1px solid var(--line2);cursor:pointer}
+.photo-btn{width:88px;height:88px;border:2px dashed var(--line2);border-radius:12px;background:var(--surface);color:var(--sage-d);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:24px;cursor:pointer;font-weight:700}
+.photo-btn span{font-size:11px;color:var(--muted)}
+.expander{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+.expander summary{cursor:pointer;font-weight:700;color:var(--sage-d);list-style:none;min-height:44px;display:flex;align-items:center}
+.expander summary::-webkit-details-marker{display:none}
+
+/* Handbook accordion */
+.acc{background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-bottom:10px;box-shadow:var(--shadow);overflow:hidden}
+.acc summary{cursor:pointer;font-weight:750;font-size:15px;padding:15px 16px;list-style:none;display:flex;align-items:center;gap:10px}
+.acc summary::-webkit-details-marker{display:none}
+.acc summary::after{content:"＋";margin-left:auto;color:var(--muted);font-weight:400;font-size:20px}
+.acc[open] summary::after{content:"－"}
+.acc .body{padding:0 16px 16px;line-height:1.5}
+.acc .body p{margin:0 0 10px} .acc .body ul{margin:0 0 10px;padding-left:20px} .acc .body li{margin-bottom:6px}
+
+/* Steps (what happens next) */
+.steps{counter-reset:s;margin:0;padding:0;list-style:none}
+.steps li{position:relative;padding:0 0 16px 42px;counter-increment:s}
+.steps li:before{content:counter(s);position:absolute;left:0;top:0;width:28px;height:28px;border-radius:50%;
+  background:var(--sage-tint);color:var(--sage-d);font-weight:800;display:flex;align-items:center;justify-content:center;font-size:14px}
+.steps li:after{content:"";position:absolute;left:13px;top:30px;bottom:2px;width:2px;background:var(--line)}
+.steps li:last-child{padding-bottom:0}
+.steps li:last-child:after{display:none}
+.steps .st{font-weight:750}
+.steps .sd{font-size:13px;color:var(--muted);line-height:1.4;margin-top:2px}
+
+/* Detail */
+.kv{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.kv:last-child{border-bottom:0}
+.kv .k{color:var(--muted);font-size:13px;flex:1} .kv .v{font-weight:700;text-align:right;flex:1.2}
+.gallery{display:flex;flex-wrap:wrap;gap:9px;margin-top:8px}
+.linkbtn{color:var(--sage-d);text-decoration:none;font-weight:700;font-size:14px}
+
+/* Bottom action bar */
+.actionbar{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);
+  padding:12px 16px calc(12px + env(safe-area-inset-bottom));z-index:30;box-shadow:0 -2px 10px rgba(22,51,61,.05)}
+.actionbar .wrap{display:flex;gap:11px}
+.actionbar .btn{flex:1;min-height:54px;font-size:17px}
+.actionbar .btn.back{flex:0 0 92px;font-size:15px}
+
+/* Bottom tabs */
+.tabbar{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);z-index:25;padding-bottom:env(safe-area-inset-bottom)}
+.tabbar .wrap{display:flex}
+.tab{flex:1;min-height:62px;background:none;border:0;color:var(--muted);font-size:11px;font-weight:800;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer}
+.tab .ic{font-size:21px;line-height:1}
+.tab.on{color:var(--ink)}
+
+/* Modal / overlay */
+.overlay{position:fixed;inset:0;background:rgba(11,25,30,.9);z-index:60;display:flex;align-items:center;justify-content:center;padding:20px}
+.overlay img{max-width:100%;max-height:90vh;border-radius:10px}
+.empty{text-align:center;color:var(--muted);padding:44px 12px}
+
+/* Hero */
+.hero{margin:22px 2px 4px}
+.hero h1{font-size:27px;font-weight:800;letter-spacing:-.5px;line-height:1.15}
+.hero .q2{font-size:19px;font-weight:750;margin-top:6px;color:var(--ink)}
+.hero .sub{margin-top:7px}
+.cat-ic{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:24px;
+  background:color-mix(in srgb,var(--cat,var(--sage-d)) 15%,#fff)}
+
+/* Property picker */
+.prop-btn{width:100%;min-height:66px;border:1.5px solid var(--line2);background:var(--surface);border-radius:14px;
+  display:flex;align-items:center;gap:13px;padding:0 15px;cursor:pointer;box-shadow:var(--shadow);
+  font-size:16px;font-weight:650;color:var(--text);transition:transform .12s ease,border-color .12s ease;margin-bottom:10px;text-align:left}
+.prop-btn:active{transform:scale(.99);border-color:var(--sage-d)}
+.prop-ic{width:40px;height:40px;border-radius:11px;background:var(--sage-tint);display:flex;align-items:center;justify-content:center;font-size:19px;flex:0 0 auto}
+.prop-label{flex:1;line-height:1.2}
+.prop-label small{display:block;color:var(--muted);font-size:12px;font-weight:500;margin-top:2px}
+.prop-go{color:var(--muted);font-size:24px}
+
+/* Emergency banner */
+.embar{background:var(--emergency);color:#fff;border-radius:16px;padding:16px;margin-top:14px;box-shadow:var(--shadow)}
+.embar .et{font-weight:800;font-size:16px}
+.embar .es{font-size:13px;opacity:.92;margin-top:3px;line-height:1.35}
+.call-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:13px 14px;margin-bottom:10px;box-shadow:var(--shadow)}
+.call-card .cc-name{font-weight:750}
+.call-card .cc-trade{font-size:12px;color:var(--muted)}
+
+/* Mobile polish */
+html{-webkit-tap-highlight-color:transparent}
+body{overscroll-behavior-y:none}
+button,a,.tile,.opt,.sev,.act,.resp-tile,.prop-btn{-webkit-tap-highlight-color:transparent}
+.tile,.opt,.sev,.btn,.act,.resp-tile{transition:transform .12s ease,border-color .12s ease,box-shadow .12s ease}
+
+/* Post-submit celebration */
+.celebrate{background:rgba(11,25,30,.5)}
+.celeb-card{background:var(--surface);border-radius:22px;padding:30px 26px;max-width:340px;width:100%;text-align:center;
+  box-shadow:0 14px 44px rgba(22,51,61,.28);animation:celebIn .34s cubic-bezier(.2,.8,.2,1.15) both;position:relative;z-index:2}
+.celeb-check{width:76px;height:76px;border-radius:50%;background:var(--ok);color:#fff;font-size:42px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;margin:0 auto 14px;
+  animation:checkPop .55s cubic-bezier(.2,.9,.2,1.3) both, ringPulse 1s ease-out .2s both}
+.celeb-title{font-size:22px;font-weight:800;letter-spacing:-.3px;animation:riseIn .4s ease .12s both}
+.celeb-sub{color:var(--muted);margin-top:6px;font-size:14px;line-height:1.4;animation:riseIn .4s ease .2s both}
+@keyframes celebIn{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes checkPop{0%{transform:scale(0) rotate(-25deg)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
+@keyframes ringPulse{0%{box-shadow:0 0 0 0 rgba(47,133,90,.45)}100%{box-shadow:0 0 0 24px rgba(47,133,90,0)}}
+@keyframes riseIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.celeb-card,.celeb-check,.celeb-title,.celeb-sub{animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="topbar"><div class="wrap">
+  <button class="logo" id="hlogo" title="Home" aria-label="Silver Star Capital — go to home">S<b>S</b></button>
+  <div class="brand" id="brand-home" role="button" tabindex="0" title="Home">Resident Portal<small>Silver Star Capital</small></div>
+  <div class="spacer"></div>
+  <button class="hbtn" id="emrg-btn" title="Emergency help">🚨 Emergency</button>
+</div></div>
+
+<div class="workbar"><div class="wrap">
+  <span class="wb-home" id="wb-home">—</span>
+  <div class="spacer"></div>
+  <button class="wb-edit" id="wb-edit">Switch home</button>
+</div></div>
+
+<div class="wrap" id="app"></div>
+
+<div class="tabbar" id="tabbar"><div class="wrap">
+  <button class="tab" data-nav="#home"><span class="ic">🏠</span>Home</button>
+  <button class="tab" data-nav="#responsibility"><span class="ic">✅</span>Who fixes?</button>
+  <button class="tab" data-nav="#welcome"><span class="ic">🛠️</span>Report</button>
+  <button class="tab" data-nav="#lease"><span class="ic">📄</span>My lease</button>
+</div></div>
+
+<div id="actionbar-slot"></div>
+<div id="modal-slot"></div>
+
+<script>
+"use strict";
+/* ============================================================================
+   Silver Star Capital — Resident Portal
+   A resident-facing companion to the manager Field-Reporting app. It teaches
+   tenants what they are responsible for (from the Residential Handbook's
+   Maintenance Responsibility Guide), shows their per-unit lease & utility
+   obligations, and lets them file a maintenance request that routes to the
+   property manager. Self-contained: one file, no build step, no dependencies.
+
+   EDITABLE CONFIG below is grounded in the Tenant Summary spreadsheet and the
+   Silver Star Capital Residential Handbook (effective July 14, 2026).
+   ========================================================================== */
+
+/* Official intake channels (from the handbook — "How to Reach Us"). */
+const OFFICIAL = {
+  formUrl: "https://www.silver-star.capital/maintenance",  // Maintenance Request Form
+  inbox:   "info@silver-star.capital",                     // Monitored inbox (Mon–Fri)
+  moveContact: "Chase Wood",                               // Move-in / move-out coordinator
+  gasEmergency: { name:"Piedmont Natural Gas — emergency", phone:"(800) 752-7504" }
+};
+
+/* Formspree — a request is POSTed here so there is a durable, emailed record in
+   addition to the on-device copy. Paste your endpoint from formspree.io (looks
+   like https://formspree.io/f/abcdwxyz). Leave the XXXX placeholder and nothing
+   is sent — the app still works fully: it saves locally and shows the official
+   Maintenance Request Form link so residents always have a way through. */
+const FORMSPREE_REQUESTS = "https://formspree.io/f/XXXXXXXX";
+
+/* Residential units (from the Properties/Leases/Utilities/Tenants tabs).
+   area = emergency-vendor service area ("weho" = Nashville / Wedgewood-Houston,
+   "franklin" = Williamson County). tenantPays / landlordCovers are per lease.
+   gas:true means the home has a gas provider (relevant to gas-leak procedure). */
+const PROPERTIES = [
+  { id:"WH-640", label:"640 Hamilton Ave", city:"Nashville, TN", type:"Co-living (shared home)", area:"weho", owner:"Stephen Ascher III", gas:true,
+    tenantPays:[["Electric","Nashville Electric Service"],["Gas","Piedmont Natural Gas"],["Water / Sewer","Metro Water Services"],["Internet",""],["Cable",""]],
+    landlordCovers:["Trash","HOA"],
+    lease:{ lateFee:"$50 flat", nsf:"$50 flat", grace:"Per lease", insurance:"Renter's insurance required (proof on request)", pets:"Only as permitted by your lease", deposit:"$6,100 (household)", extra:[] } },
+  { id:"WH-642", label:"642 Hamilton Ave", city:"Nashville, TN", type:"Co-living (shared home)", area:"weho", owner:"Matthew Casas", gas:true,
+    tenantPays:[["Electric","Nashville Electric Service"],["Gas","Piedmont Natural Gas"],["Water / Sewer","Metro Water Services"],["Internet",""],["Cable",""]],
+    landlordCovers:["Trash","HOA"],
+    lease:{ lateFee:"$50 flat", nsf:"Variable", grace:"Per lease", insurance:"Renter's insurance required (proof on request)", pets:"Allowed with a pet deposit", deposit:"$5,800 (household)", extra:[] } },
+  { id:"WH-646", label:"646 Hamilton Ave", city:"Nashville, TN", type:"Co-living (shared home)", area:"weho", owner:"Charles Harris", gas:true,
+    tenantPays:[["Electric","Nashville Electric Service"],["Gas","Piedmont Natural Gas"],["Water / Sewer","Metro Water Services"],["Internet",""],["Cable",""],["Phone",""]],
+    landlordCovers:["Trash","HOA (in base rent)"],
+    lease:{ lateFee:"$50 flat", nsf:"Variable", grace:"5-day grace period", insurance:"$100,000 renter's insurance required", pets:"No pets", deposit:"$4,200 (household)", extra:["No parking","No storage"] } },
+  { id:"SF-2596", label:"2596 Tom Anderson Rd", city:"Franklin, TN", type:"Single-family home", area:"franklin", owner:"JCE Owner LLC", gas:false, lawnTenant:true,
+    tenantPays:[["Electric","Middle Tennessee Electric"],["Water","HB&TS"]],
+    landlordCovers:[],
+    lease:{ lateFee:"$50 flat", nsf:"Variable", grace:"Per lease", insurance:"Renter's insurance required (proof on request)", pets:"Per lease", deposit:"$1,000 (last month's rent also held)", extra:["Lawn care is the tenant's (routine mowing & edging)"] } },
+  { id:"SF-2590", label:"2590 Tom Anderson Rd", city:"Franklin, TN", type:"Single-family home", area:"franklin", owner:"JCE Owner LLC", gas:false, lawnTenant:true,
+    tenantPays:[["Electric","Middle Tennessee Electric"],["Water","HB&TS"]],
+    landlordCovers:[],
+    lease:{ lateFee:"$50 flat", nsf:"Variable", grace:"Per lease", insurance:"Renter's insurance required (proof on request)", pets:"Per lease", deposit:"$2,500", extra:["Parking per addendum","Lawn care is the tenant's (routine mowing & edging)"] } },
+  { id:"SF-2570", label:"2570 Tom Anderson Rd", city:"Franklin, TN", type:"Single-family home", area:"franklin", owner:"JCE Owner LLC", gas:false, lawnTenant:true,
+    tenantPays:[["Electric","Middle Tennessee Electric"],["Water","HB&TS"]],
+    landlordCovers:[],
+    lease:{ lateFee:"Per lease", nsf:"Per lease", grace:"Per lease", insurance:"Renter's insurance required (proof on request)", pets:"Per lease", deposit:"Per lease", extra:["Operated as a short-term rental","Lawn care is the tenant's (routine mowing & edging)"] } },
+  { id:"DV-1051-A", label:"1051 2nd Ave S — Unit A", city:"Nashville, TN", type:"Duplex (development site)", area:"weho", owner:"2nd Avenue Holdings, LLC", gas:false,
+    tenantPays:[["Electric","Nashville Electric Service"],["Water / Sewer","Metro Water Services"]],
+    landlordCovers:[],
+    lease:{ lateFee:"$50", nsf:"Variable", grace:"Per lease", insurance:"Renter's insurance required (proof on request)", pets:"Per lease", deposit:"Per lease", extra:["Development site — terminable on 90 days' notice","Some utility charges are billed to you by the owner"] } },
+  { id:"DV-1051-B", label:"1051 2nd Ave S — Unit B", city:"Nashville, TN", type:"Duplex (development site)", area:"weho", owner:"2nd Avenue Holdings, LLC", gas:false,
+    tenantPays:[["Electric","Nashville Electric Service"],["Water / Sewer","Metro Water Services"]],
+    landlordCovers:[],
+    lease:{ lateFee:"$50", nsf:"Variable", grace:"Per lease", insurance:"Renter's insurance required (proof on request)", pets:"Per lease", deposit:"Per lease", extra:["Development site — terminable on 90 days' notice","Some utility charges are billed to you by the owner"] } }
+];
+
+/* Emergency vendor directory (from the Vendors tab), grouped by service area.
+   Per the handbook, residents may call these directly in a true emergency; for
+   everything else, submit through the Maintenance Request Form. */
+const EMERGENCY_VENDORS = {
+  weho:[
+    { trade:"Plumber", name:"Joe Catino (Property Manager)", phone:"(617) 633-8949" },
+    { trade:"Electrician", name:"XAE Electrical", phone:"(404) 825-6541" },
+    { trade:"HVAC", name:"Bradshaw HVAC", phone:"(615) 642-6529" },
+    { trade:"Garage door", name:"Allied Overhead Door", phone:"(615) 237-7724" },
+    { trade:"Pest control", name:"Discovery Pest Solutions", phone:"(615) 663-0193" }
+  ],
+  franklin:[
+    { trade:"Plumber", name:"Manuel Velasquez", phone:"(615) 498-9911" },
+    { trade:"Plumber (backup)", name:"Precision Plumbing", phone:"(615) 876-8603" },
+    { trade:"Electrician", name:"XAE Electrical", phone:"(404) 825-6541" },
+    { trade:"Septic", name:"Outright Septic", phone:"(615) 558-8144" },
+    { trade:"Pest control", name:"Discovery Pest Solutions", phone:"(615) 663-0193" }
+  ]
+};
+
+/* Response-time tiers (from the handbook's "Response Time Expectations").
+   These map to the funnel urgency levels; higher index = more urgent. */
+const URG = { routine:0, soon:1, urgent:2, emergency:3 };
+const TIERS = {
+  emergency:{ label:"Emergency", window:"Same day · 24/7", color:"var(--emergency)" },
+  urgent:   { label:"Urgent",    window:"Within 24 hours", color:"var(--urgent)" },
+  soon:     { label:"Standard",  window:"Within 5 business days", color:"var(--soon)" },
+  routine:  { label:"Project",   window:"Scheduled", color:"var(--routine)" }
+};
+
+/* The 5-step workflow (from the handbook), shown on every submitted request. */
+const WORKFLOW = [
+  ["Submit","You send the request through this portal or the Maintenance Request Form."],
+  ["Acknowledge","You get an automatic reply confirming we have it and are on it."],
+  ["Approve","The property manager reviews, approves, and names the preferred vendor. Every request is approved before any work is scheduled."],
+  ["Schedule","You contact the assigned vendor and set a time directly — they have the scope and your details."],
+  ["Bill & close","The vendor invoices Silver Star Capital directly. We review, close the ticket, and confirm with you."]
+];
+
+/* ---------------------------------------------------------------------------
+   MAINTENANCE RESPONSIBILITY GUIDE — verbatim from the handbook table, plus
+   a plain-language verdict, DIY steps for the tenant items, and which report
+   category to open if it's ours to fix. verdict: tenant | landlord | shared.
+   propAware:"lawn" flips tenant/landlord by whether the home has tenant lawn duty.
+   --------------------------------------------------------------------------- */
+const RESP = [
+  { id:"hvac-system", name:"Heating & cooling system", icon:"🌡️", verdict:"landlord", report:"hvac",
+    tenant:"Report issues; keep vents and returns unobstructed.", landlord:"All repair and replacement.",
+    diy:["Keep supply vents and the return grille clear of furniture and rugs.","If it's not heating or cooling, report it — repairs are ours."] },
+  { id:"hvac-filters", name:"HVAC air filters", icon:"🔲", verdict:"tenant", report:"hvac",
+    tenant:"Replace every 60–90 days.", landlord:"Provides the initial filter at move-in.",
+    diy:["Read the size printed on the frame of the old filter (e.g. 16×25×1).","Buy a matching filter at any hardware or grocery store.","Slide it in with the airflow arrow pointing toward the unit/duct.","Swap it every 60–90 days — a clogged filter is the #1 cause of HVAC failures."] },
+  { id:"plumbing-fixtures", name:"Plumbing fixtures", icon:"🚰", verdict:"shared", report:"plumbing",
+    tenant:"Proper use and routine cleaning.", landlord:"Repair leaks and failures.",
+    diy:["Clean aerators and stoppers now and then to keep flow strong.","A drip, leak, or a fixture that won't shut off is ours — report it."] },
+  { id:"drain-clogs", name:"Drain clogs", icon:"🪠", verdict:"shared", report:"plumbing",
+    tenant:"Clear tenant-caused clogs.", landlord:"Line failures and normal repairs.",
+    diy:["Try a cup plunger first for a single slow sink, tub, or toilet.","Never pour grease down the drain; keep wipes, hair, and food out.","If several fixtures back up at once, that's a line issue — report it right away."] },
+  { id:"appliances", name:"Appliances", icon:"🧺", verdict:"shared", report:"appliances",
+    tenant:"Normal cleaning and proper use.", landlord:"Repair and replacement.",
+    diy:["Clean the dryer lint trap every load and wipe fridge/oven seals.","If an appliance stops working, report it — repair/replacement is ours."] },
+  { id:"light-bulbs", name:"Light bulbs", icon:"💡", verdict:"tenant", report:"electrical",
+    tenant:"Replace consumable bulbs.", landlord:"Fixture repair/replacement.",
+    diy:["Match the base and don't exceed the fixture's max wattage.","If the fixture itself is broken, flickers with a good bulb, or sparks — report it (and treat sparks as an emergency)."] },
+  { id:"smoke-detectors", name:"Smoke / CO detector batteries", icon:"🔔", verdict:"tenant", report:"detector",
+    tenant:"Replace batteries if accessible.", landlord:"Detector replacement.",
+    diy:["A single chirp every minute means the battery is low — replace it.","Test detectors monthly with the button.","If it's hardwired, unreachable, missing, or won't stop after a new battery, report it."] },
+  { id:"outlets-switches", name:"Outlets & switches", icon:"🔌", verdict:"landlord", report:"electrical",
+    tenant:"Report issues.", landlord:"Repair and replacement.",
+    diy:["A dead outlet is often a tripped GFIC — press the RESET button on the nearest kitchen/bath/outdoor outlet, or reset the breaker once.","Sparking, burning smell, or a warm outlet or panel is an emergency — cut power at the breaker if safe and get help now."] },
+  { id:"walls-finishes", name:"Interior walls & finishes", icon:"🖌️", verdict:"shared", report:"drywall",
+    tenant:"Minor patching and cleaning; normal picture hanging is fine.", landlord:"Structural repairs.",
+    diy:["Small nail holes and scuffs are yours to patch and clean.","Cracks that keep growing, water stains, or anything structural — report it."] },
+  { id:"pests", name:"Pests", icon:"🐜", verdict:"shared", report:"pest",
+    tenant:"Report promptly; keep the home sanitary.", landlord:"Treatment of non-tenant infestations.",
+    diy:["Store food sealed, take out trash, and wipe up crumbs and spills.","Report activity early — the sooner we treat, the smaller the problem."] },
+  { id:"roof-exterior", name:"Roof & exterior", icon:"🏠", verdict:"landlord", report:"roof-leak",
+    tenant:"Report leaks and damage immediately.", landlord:"All repairs.",
+    diy:["Report any roof or ceiling leak the moment you notice it — delay can make you responsible for added damage."] },
+  { id:"windows-doors", name:"Windows & exterior doors", icon:"🪟", verdict:"landlord", report:"windows",
+    tenant:"Report damage.", landlord:"Repair and replacement.",
+    diy:["A broken exterior door or window is a security emergency — report it right away."] },
+  { id:"common-areas", name:"Common areas (shared homes)", icon:"🧹", verdict:"shared", report:"other",
+    tenant:"Keep clean and clear; roommates share the upkeep.", landlord:"Repairs to building systems.",
+    diy:["Everyone on a joint lease shares responsibility for kitchens, living areas, the yard, and trash.","Building-system repairs are ours — report them."] },
+  { id:"lawn", name:"Lawn & landscaping", icon:"🌳", verdict:"shared", report:"landscaping", propAware:"lawn",
+    tenant:"If your home requires it: routine mowing, edging, and leaf/debris removal.", landlord:"Major landscape repairs.",
+    diy:["At the single-family homes, routine mowing and edging is the tenant's.","At the shared homes, a landscaper handles the grounds — just report problems.","Irrigation failures, dead trees, or drainage issues are ours to repair."] }
+];
+
+/* ---------------------------------------------------------------------------
+   REPORT FUNNEL — groups, deep specs, and issue portals. Mirrors the manager
+   app's engine so a resident's request captures exactly what the manager needs
+   to route it. Trimmed of manager-only concepts (invoices, subcontractors).
+   --------------------------------------------------------------------------- */
+const GROUPS = [
+  { id:"safety",     name:"Safety & Emergency",   color:"#c0392b", icon:"🚨" },
+  { id:"building",   name:"Building Systems",     color:"#16333D", icon:"🔧" },
+  { id:"structure",  name:"Structure & Interior", color:"#4f7d63", icon:"🏠" },
+  { id:"exterior",   name:"Exterior & Grounds",   color:"#8a7a3b", icon:"🌳" },
+  { id:"sanitation", name:"Sanitation & Pest",    color:"#7a5aa0", icon:"🧹" },
+  { id:"utilities",  name:"Utilities & General",  color:"#b06a2a", icon:"⚡" }
+];
+const DEEP = {
+  plumbing:()=>[
+    {type:"dropdown",q:"What's leaking?",options:["Toilet","Sink / faucet","Shower / tub","Water heater","Sewer / main drain","Outdoor spigot","Something else"],required:true},
+    {type:"safety",q:"Is water flooding, or can't you shut it off?"},
+    {type:"yesno",q:"Standing water or leaking right now?",urgencyIfYes:"urgent"},
+    {type:"dropdown",q:"Water heater — gas or electric?",options:["Gas","Electric","Not sure"],when:c=>c.answers["What's leaking?"]==="Water heater"},
+    {type:"yesno",q:"Has this happened before (last 6 months)?"}
+  ],
+  hvac:()=>[
+    {type:"dropdown",q:"Which system?",options:["Central AC","Furnace","Heat pump","Mini-split","Boiler","Not sure"],required:true},
+    {type:"dropdown",q:"What's it doing?",options:["Runs but no heat/cool","Won't turn on","Making noise","Leaking water","Something else"],required:true},
+    {type:"safety",q:"Any gas or burning smell?"},
+    {type:"yesno",q:"Did you check the air filter and thermostat batteries?"}
+  ],
+  electrical:()=>[
+    {type:"safety",q:"Sparks, burning smell, or a hot outlet/panel?"},
+    {type:"dropdown",q:"What's out?",options:["Outlet","Light fixture","Switch","Breaker panel","Whole room","Something else"],required:true},
+    {type:"yesno",q:"Did a breaker trip?"},
+    {type:"yesno",q:"Trips again when you reset it?",urgencyIfYes:"urgent",when:c=>c.answers["Did a breaker trip?"]==="Yes"}
+  ],
+  handyman:()=>[
+    {type:"multiselect",q:"What needs doing? (tap all)",options:["Drywall / paint touch-up","Door or lock","Cabinet / shelf","Appliance issue","Furniture / mount","Fence / deck","Other"],required:true},
+    {type:"dropdown",q:"When's it needed?",options:["ASAP","This week","This month","Whenever"],required:true,
+      setsUrgency:v=>({"ASAP":"urgent","This week":"soon","This month":"routine","Whenever":"routine"}[v]||"routine")}
+  ]
+};
+const PORTALS = [
+  // Safety & Emergency
+  { id:"gas-leak", group:"safety", name:"Gas leak / odor", dangerPrompt:"Smell gas NOW? Leave the home & call 911.", subtypes:["Gas odor","Hissing","CO alarm","Suspected leak"] },
+  { id:"fire-smoke", group:"safety", name:"Fire / smoke", dangerPrompt:"Active fire or smoke RIGHT NOW?", subtypes:["Active fire","Smoke damage","Burn marks","Electrical fire"] },
+  { id:"detector", group:"safety", name:"Smoke / CO detector", dangerPrompt:"Alarm sounding for real smoke/CO now?", subtypes:["Smoke detector","CO detector","Chirping / battery","Missing"] },
+  { id:"water-intrusion", group:"safety", name:"Flood / active leak", dangerPrompt:"Active flooding or water near electrical?", subtypes:["Flooding","Standing water","Roof/ceiling drip","Water heater burst"] },
+  { id:"sewer-septic", group:"safety", name:"Sewage backup", dangerPrompt:"Sewage overflowing / contamination?", subtypes:["Backup","Overflow","Odor","Slow drains"] },
+  { id:"lockout", group:"safety", name:"Lockout", dangerPrompt:"Locked out and unsafe right now?", subtypes:["Locked out","Lost key","Broken lock","Won't lock"] },
+  { id:"security", group:"safety", name:"Break-in / broken door", dangerPrompt:"Break-in or an open/broken exterior door or window now?", subtypes:["Break-in","Broken exterior door","Broken window","Won't secure"] },
+
+  // Building Systems
+  { id:"plumbing", group:"building", name:"Plumbing", deep:true },
+  { id:"hvac", group:"building", name:"Heating / Cooling", deep:true },
+  { id:"electrical", group:"building", name:"Electrical", deep:true },
+  { id:"water-heater", group:"building", name:"Water heater", dangerPrompt:"Gas smell, big leak, or scalding water?", subtypes:["No hot water","Leaking","Pilot / ignition","Not sure"] },
+  { id:"appliances", group:"building", name:"Appliances", dangerPrompt:"Sparking, smoke, or gas smell?", subtypes:["Refrigerator","Range / oven","Dishwasher","Washer","Dryer","Microwave"] },
+
+  // Structure & Interior
+  { id:"roof-leak", group:"structure", name:"Roof / ceiling leak", dangerPrompt:"Ceiling sagging / collapse risk?", subtypes:["Active drip","Water stain","Sagging ceiling","Missing shingles"] },
+  { id:"mold", group:"structure", name:"Mold / moisture", subtypes:["Visible mold","Musty smell","Persistent damp","Condensation"] },
+  { id:"drywall", group:"structure", name:"Drywall / paint", subtypes:["Hole / damage","Cracks","Peeling paint","Water damage"] },
+  { id:"flooring", group:"structure", name:"Flooring", dangerPrompt:"Trip / fall hazard?", subtypes:["Damaged / broken","Water damage","Loose / lifting","Trip hazard"] },
+  { id:"windows", group:"structure", name:"Windows / glass", dangerPrompt:"Broken glass hazard?", subtypes:["Broken glass","Won't open/close","Foggy / failed seal","Torn screen"] },
+  { id:"doors", group:"structure", name:"Doors / locks", subtypes:["Won't lock","Won't open","Broken hardware","Access"] },
+
+  // Exterior & Grounds
+  { id:"landscaping", group:"exterior", name:"Landscaping / lawn", subtypes:["Overgrowth","Irrigation","Dead lawn / tree","Drainage"] },
+  { id:"garage-door", group:"exterior", name:"Garage door", dangerPrompt:"Door off track / falling?", subtypes:["Won't open","Won't close","Off track","Opener failed"] },
+  { id:"gutters", group:"exterior", name:"Gutters / drainage", subtypes:["Clogged","Detached","Leaking","Poor drainage"] },
+  { id:"fencing", group:"exterior", name:"Fencing / gates", subtypes:["Damaged fence","Broken gate","Leaning","Missing section"] },
+  { id:"ext-lighting", group:"exterior", name:"Exterior lighting", subtypes:["Out","Flickering","Damaged fixture","Timer / sensor"] },
+
+  // Sanitation & Pest
+  { id:"pest", group:"sanitation", name:"Pest / rodent", subtypes:["Rodents","Roaches","Ants","Bed bugs","Wasps / bees"] },
+  { id:"trash", group:"sanitation", name:"Trash / debris", subtypes:["Overflow","Missed pickup","Debris","Bulk items"] },
+
+  // Utilities & General
+  { id:"handyman", group:"utilities", name:"Handyman / punch list", deep:true },
+  { id:"other", group:"utilities", name:"Something else", subtypes:["General note"] }
+];
+
+/* ============================================================================
+   STATE — persisted to localStorage so a resident's home + past requests stick.
+   ========================================================================== */
+const LS_KEY="ssc_resident_v1", LS_ID="ssc_resident_identity";
+let AppState = load();
+function load(){ try{ const s=JSON.parse(localStorage.getItem(LS_KEY)); if(s&&Array.isArray(s.reports)) return s; }catch(e){} return { reports:[] }; }
+const store = { get(){ return AppState; }, set(n){ AppState=n; try{ localStorage.setItem(LS_KEY, JSON.stringify(n)); }catch(e){} } };
+function persist(){ store.set(AppState); }
+
+/* Resident identity is the "key at the gate": the resident types their own name,
+   property, and unit — there is no dropdown of other homes to browse. We match
+   the typed address to a known unit behind the scenes so the experience stays
+   tailored (utilities, lease, emergency contacts). Unmatched addresses still get
+   in, with general guidance. */
+let RESIDENT = loadIdentity();
+function loadIdentity(){ try{ const s=JSON.parse(localStorage.getItem(LS_ID)); if(s&&s.name&&s.propertyText) return s; }catch(e){} return null; }
+function saveIdentity(r){ RESIDENT=r; try{ localStorage.setItem(LS_ID, JSON.stringify(r)); }catch(e){} }
+/* Match a typed address + unit to a known property id. Uses the leading street
+   number and, for the 1051 duplex, the A/B unit letter to disambiguate. */
+function matchProperty(propText, unitText){
+  const t=(propText||"").toLowerCase();
+  const num=(t.match(/\d{3,4}/)||[])[0];
+  if(!num) return "";
+  let cands=PROPERTIES.filter(p=>p.label.toLowerCase().includes(num));
+  if(!cands.length) return "";
+  if(cands.length===1) return cands[0].id;
+  // Multiple units share the street number (the 1051 duplex) — use the unit letter.
+  const u=((unitText||"")+" "+t).toLowerCase();
+  const wantB=/\bb\b|unit b|apt b|-b\b/.test(u);
+  const wantA=/\ba\b|unit a|apt a|-a\b/.test(u);
+  const byLetter=cands.find(p=>p.label.toLowerCase().endsWith(wantB?"unit b":wantA?"unit a":"~none~"));
+  return (byLetter||cands[0]).id;
+}
+
+/* Fire-and-forget POST to Formspree; never blocks the UI, swallows failures. */
+function formspreeEnabled(ep){ return ep && !/XXXX/.test(ep); }
+function sendToFormspree(payload, endpoint){
+  if(!formspreeEnabled(endpoint)) return;
+  try{ fetch(endpoint,{ method:"POST", headers:{ "Content-Type":"application/json","Accept":"application/json" }, body:JSON.stringify(payload) }).catch(()=>{}); }catch(e){}
+}
+function dataURLtoBlob(dataurl){
+  const c=dataurl.indexOf(","); const head=dataurl.slice(0,c);
+  const mime=(head.match(/data:(.*?);/)||[])[1]||"image/jpeg";
+  const bin=atob(dataurl.slice(c+1)); const arr=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
+  return new Blob([arr],{type:mime});
+}
+function sendRequest(r){
+  if(!formspreeEnabled(FORMSPREE_REQUESTS)) return;
+  const fields=requestPayload(r), photos=r.photos||[];
+  if(!photos.length){ sendToFormspree(fields, FORMSPREE_REQUESTS); return; }
+  try{
+    const fd=new FormData();
+    Object.entries(fields).forEach(([k,v])=>fd.append(k, typeof v==="boolean"?(v?"Yes":"No"):String(v)));
+    photos.forEach((p,i)=>{ try{ const b=dataURLtoBlob(p); const ext=((b.type.split("/")[1])||"jpg").replace("jpeg","jpg");
+      fd.append("photo"+(i+1), b, `request-${r.id}-${i+1}.${ext}`); }catch(e){} });
+    fetch(FORMSPREE_REQUESTS,{ method:"POST", headers:{ "Accept":"application/json" }, body:fd }).catch(()=>{});
+  }catch(e){ sendToFormspree(fields, FORMSPREE_REQUESTS); }
+}
+function requestPayload(r){
+  return {
+    _subject:`Maintenance request — ${r.portalName} @ ${propLabel(r.location.property)}`,
+    type:"resident_request", id:r.id, createdAt:r.createdAt,
+    property:propLabel(r.location.property)||(RESIDENT&&RESIDENT.propertyText)||"", unitArea:r.location.unitArea||"", owner:(propById(r.location.property)||{}).owner||"",
+    residentIdentity:(RESIDENT&&RESIDENT.name)||"",
+    category:(groupById(r.category)||{}).name||r.category, issue:r.portalName,
+    urgency:(TIERS[r.urgency]||{}).label||r.urgency, responseWindow:(TIERS[r.urgency]||{}).window||"",
+    hazard:!!r.hazard, unitUnusable:!!r.habitabilityImpact, flags:(r.flags||[]).join(", "),
+    summary:r.autoSummary, details:(r.answers||[]).map(a=>`${a.q}: ${a.a}`).join(" | "),
+    note:r.description||"", photoCount:(r.photos||[]).length,
+    residentName:(r.contact||{}).name||"", residentPhone:(r.contact||{}).phone||"", residentEmail:(r.contact||{}).email||""
+  };
+}
+
+/* Helpers */
+const $ = (s,r=document)=>r.querySelector(s);
+const app = document.getElementById("app");
+const groupById = id => GROUPS.find(g=>g.id===id);
+const portalById = id => PORTALS.find(p=>p.id===id);
+const propById = id => PROPERTIES.find(p=>p.id===id);
+const respById = id => RESP.find(x=>x.id===id);
+const propLabel = id => (propById(id)||{}).label || id || "";
+function uid(p){ return p+"_"+Math.random().toString(36).slice(2,9); }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function telHref(p){ return "tel:"+String(p).replace(/[^0-9+]/g,""); }
+function fmtDateTime(iso){ return new Date(iso).toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}); }
+
+/* The active property is derived from the resident's matched identity. */
+let currentProperty = RESIDENT ? (RESIDENT.propId||"") : "";
+/* curProp always returns a usable object. When the typed address didn't match a
+   known unit, it returns a generic shell built from what the resident typed. */
+function curProp(){
+  const m=propById(currentProperty);
+  if(m) return m;
+  return { id:"", label:(RESIDENT&&RESIDENT.propertyText)||"Your home", city:"", type:"", area:null, owner:"", gas:false, generic:true,
+    tenantPays:[], landlordCovers:[],
+    lease:{ lateFee:"Per lease", nsf:"Per lease", grace:"Per lease", deposit:"Per lease", insurance:"Renter's insurance required (proof on request)", pets:"Per lease", extra:[] } };
+}
+function firstName(){ return RESIDENT&&RESIDENT.name ? RESIDENT.name.trim().split(/\s+/)[0] : ""; }
+function unitLabel(){ return RESIDENT&&RESIDENT.unit ? RESIDENT.unit.trim() : ""; }
+
+/* Property-aware verdict for the responsibility guide (lawn flips by home). */
+function respVerdict(item){
+  if(item.propAware==="lawn"){ return curProp() && curProp().lawnTenant ? "tenant" : "landlord"; }
+  return item.verdict;
+}
+function verdictMeta(v){
+  return v==="tenant"  ? {cls:"tenant",   label:"You handle this", icon:"🧰"}
+       : v==="landlord"? {cls:"landlord", label:"We handle it — report it", icon:"📨"}
+       :                 {cls:"shared",   label:"Shared", icon:"🤝"};
+}
+
+/* ============================================================================
+   ROUTER
+   ========================================================================== */
+let F = null;
+function navigate(h){ if(location.hash===h){ route(); } else { location.hash=h; } }
+window.addEventListener("hashchange", route);
+function setTab(h){ document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on", t.dataset.nav===h)); }
+function clearBars(){ document.getElementById("actionbar-slot").innerHTML=""; }
+
+function route(){
+  clearBars();
+  document.body.style.paddingBottom="88px";
+  // First run: no resident identified yet → the gate is entering your details.
+  if(!RESIDENT && (location.hash!=="#gate")){ location.hash="#gate"; return; }
+  const h = location.hash || "#home";
+  const [base, arg] = h.replace(/^#/,"").split("/");
+  const wb=document.querySelector(".workbar"); if(wb) wb.style.display=(base==="gate"||base==="welcome"||base==="funnel")?"none":"";
+  renderWorkbar();
+
+  if(base==="funnel"){ if(!F || F.portal.id!==arg) startFunnel(arg); else renderFunnel(); setTab("#welcome"); return; }
+  F=null;
+  if(base==="gate"){ setTab("#home"); renderGate(); }
+  else if(base==="welcome"){ setTab("#welcome"); renderWelcome(); }
+  else if(base==="responsibility"){ setTab("#responsibility"); renderResponsibility(); }
+  else if(base==="resp"){ setTab("#responsibility"); renderRespDetail(arg); }
+  else if(base==="lease"){ setTab("#lease"); renderLease(); }
+  else if(base==="emergency"){ setTab("#home"); renderEmergency(); }
+  else if(base==="handbook"){ setTab("#home"); renderHandbook(); }
+  else if(base==="requests"){ setTab("#home"); renderRequests(); }
+  else if(base==="request"){ setTab("#home"); renderRequestDetail(arg); }
+  else { setTab("#home"); renderHome(); }
+  window.scrollTo(0,0);
+}
+
+/* ============================================================================
+   THE GATE — resident enters their own details (no dropdown of other homes)
+   ========================================================================== */
+function renderGate(){
+  const r=RESIDENT||{name:"",propertyText:"",unit:""};
+  let html=`<div class="hero"><h1>Welcome home 👋</h1>
+    <div class="q2">Let's get you set up</div>
+    <div class="small muted sub">Enter your details to open your resident portal. We'll tailor everything — utilities, rules, and who to call — to your home.</div></div>
+    <div class="card" style="margin-top:16px">
+      <label class="field" style="margin-top:0">Your name</label>
+      <input class="inp" id="g-name" value="${esc(r.name)}" placeholder="First and last name" autocomplete="name">
+      <label class="field">Property address</label>
+      <input class="inp" id="g-prop" value="${esc(r.propertyText)}" placeholder="e.g. 640 Hamilton Ave" autocomplete="street-address">
+      <label class="field">Unit / bedroom <span class="muted">(if applicable)</span></label>
+      <input class="inp" id="g-unit" value="${esc(r.unit)}" placeholder="e.g. Bedroom 2, Unit A">
+      <div id="g-err" class="small" style="color:var(--emergency);height:18px;margin:8px 0 0"></div>
+    </div>
+    <div class="small muted" style="margin:2px 2px 0">Your details are stored only on this device.</div>`;
+  app.innerHTML=html;
+  document.body.style.paddingBottom="100px";
+  document.getElementById("actionbar-slot").innerHTML=`<div class="actionbar"><div class="wrap">
+    <button class="btn primary block" id="g-go">Enter my portal →</button></div></div>`;
+  const submit=()=>{
+    const name=($("#g-name").value||"").trim();
+    const propertyText=($("#g-prop").value||"").trim();
+    const unit=($("#g-unit").value||"").trim();
+    if(!name){ $("#g-err").textContent="Please enter your name."; return; }
+    if(!propertyText){ $("#g-err").textContent="Please enter your property address."; return; }
+    const propId=matchProperty(propertyText, unit);
+    saveIdentity({ name, propertyText, unit, propId });
+    currentProperty=propId||"";
+    navigate("#home");
+  };
+  $("#g-go").addEventListener("click",submit);
+  ["g-name","g-prop","g-unit"].forEach(id=>$("#"+id).addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); submit(); } }));
+}
+/* Static "your home" bar — no browsing other properties. */
+function renderWorkbar(){
+  const el=document.getElementById("wb-home"); if(!el) return;
+  const p=curProp();
+  el.innerHTML=`${esc(p.label)}${unitLabel()?` <small>· ${esc(unitLabel())}</small>`:""}`;
+}
+
+/* ============================================================================
+   HOME
+   ========================================================================== */
+function renderHome(){
+  const reports=store.get().reports.filter(r=>r.location.property===currentProperty);
+  const p=curProp();
+  let html=`<div class="hero"><h1>Hi${firstName()?" "+esc(firstName()):" there"} 👋</h1>
+    <div class="q2">How can we help at ${esc(p.label)}?</div>
+    <div class="small muted sub">Not sure who fixes something? Start with <b>Who fixes this?</b> Anything the owner handles, send us a request.</div></div>
+
+    <div class="actions">
+      <button class="act" data-go="#responsibility" style="--acc:var(--tenant)">
+        <span class="aic">✅</span><span class="atitle">Who fixes this?</span>
+        <span class="asub">Learn what's yours vs. ours — with DIY tips.</span></button>
+      <button class="act" data-go="#welcome" style="--acc:var(--ink)">
+        <span class="aic">🛠️</span><span class="atitle">Report an issue</span>
+        <span class="asub">Send a maintenance request in about 30 seconds.</span></button>
+      <button class="act" data-go="#lease" style="--acc:var(--soon)">
+        <span class="aic">📄</span><span class="atitle">My lease & utilities</span>
+        <span class="asub">What you pay, what's covered, key rules.</span></button>
+      <button class="act" data-go="#emergency" style="--acc:var(--emergency)">
+        <span class="aic">🚨</span><span class="atitle">Emergency help</span>
+        <span class="asub">What to do right now, and who to call.</span></button>
+    </div>
+
+    <button class="act" data-go="#handbook" style="--acc:var(--shared);width:100%;flex-direction:row;align-items:center;min-height:0;gap:14px;margin-top:12px">
+      <span class="aic">📘</span>
+      <span style="flex:1"><span class="atitle" style="display:block">Resident handbook</span>
+      <span class="asub" style="margin:0">How requests work, entry rules, house rules, insurance.</span></span>
+      <span class="prop-go">›</span></button>`;
+
+  html+=`<div class="sec"><h2>Your recent requests</h2><div class="spacer"></div>${reports.length?'<a class="linkbtn" href="#requests">See all</a>':''}</div>`;
+  html += reports.length ? sortReports(reports).slice(0,3).map(reportRow).join("")
+    : `<div class="empty">No requests yet. Something broken? Tap <b>Report an issue</b>.</div>`;
+
+  app.innerHTML=html;
+  document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>navigate(b.dataset.go)));
+  wireReportRows();
+}
+
+/* ============================================================================
+   RESPONSIBILITY GUIDE ("Who fixes this?")
+   ========================================================================== */
+function renderResponsibility(){
+  let html=`<div class="hero" style="margin-bottom:6px"><h1 style="font-size:23px">Who fixes this?</h1>
+    <div class="small muted sub">Tap anything to see whether it's yours or ours — and how to handle it. This is a practical guide; your signed lease always controls.</div></div>
+    <div class="row" style="gap:8px;margin:14px 2px 4px;flex-wrap:wrap">
+      <span class="verdict tenant">🧰 You</span><span class="verdict shared">🤝 Shared</span><span class="verdict landlord">📨 We report</span>
+    </div>`;
+  RESP.forEach(item=>{
+    const v=respVerdict(item), m=verdictMeta(v);
+    html+=`<button class="resp-tile" data-resp="${item.id}" style="--vc:var(--${m.cls})">
+      <span class="resp-ic">${item.icon}</span>
+      <span style="flex:1;min-width:0;text-align:left"><span class="rt-name">${esc(item.name)}</span>
+        <span class="rt-sub">${m.icon} ${esc(m.label)}</span></span>
+      <span class="resp-go">›</span></button>`;
+  });
+  app.innerHTML=html;
+  document.querySelectorAll("[data-resp]").forEach(b=>b.addEventListener("click",()=>navigate("#resp/"+b.dataset.resp)));
+}
+function renderRespDetail(id){
+  const item=respById(id); if(!item){ navigate("#responsibility"); return; }
+  const v=respVerdict(item), m=verdictMeta(v);
+  const canReport = v!=="tenant";
+  let html=`<div class="sec"><a class="linkbtn" href="#responsibility">‹ Who fixes this?</a></div>
+    <div class="card" style="border-top:4px solid var(--${m.cls})">
+      <div class="row" style="align-items:center;gap:12px">
+        <span class="resp-ic" style="width:52px;height:52px;font-size:26px">${item.icon}</span>
+        <div><h2 style="font-size:20px">${esc(item.name)}</h2>
+          <div style="margin-top:7px"><span class="verdict ${m.cls}">${m.icon} ${esc(m.label)}</span></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="rr"><span class="rr-ic">🧰</span><div><div class="rr-k" style="color:var(--tenant)">You (tenant)</div><div class="rr-v">${esc(item.tenant)}</div></div></div>
+      <div class="rr"><span class="rr-ic">🏢</span><div><div class="rr-k" style="color:var(--landlord)">Owner / Silver Star</div><div class="rr-v">${esc(item.landlord)}</div></div></div>
+    </div>`;
+  if(item.diy&&item.diy.length){
+    html+=`<div class="sec"><span class="sec-ic">💡</span><h2>${v==="tenant"?"How to handle it":"Good to know"}</h2></div>
+      <div class="card"><ul class="diy" style="margin:0;padding-left:20px">${item.diy.map(d=>`<li>${esc(d)}</li>`).join("")}</ul></div>`;
+  }
+  app.innerHTML=html;
+  if(canReport){
+    document.body.style.paddingBottom="100px";
+    const portal=item.report&&portalById(item.report)?item.report:"other";
+    document.getElementById("actionbar-slot").innerHTML=`<div class="actionbar"><div class="wrap">
+      <button class="btn primary block" id="resp-report">📨 Report this to us</button></div></div>`;
+    $("#resp-report").addEventListener("click",()=>navigate("#funnel/"+portal));
+  }
+}
+
+/* ============================================================================
+   REPORT FUNNEL — category → property confirm → guided steps
+   ========================================================================== */
+function renderWelcome(){
+  let html=`<div class="hero"><h1>Report an issue</h1>
+    <div class="q2">What's going on?</div>
+    <div class="small muted sub">Pick a category. Most requests take about 30 seconds. You're reporting for <b>${esc(curProp().label)}</b>.</div></div>
+    <div class="grid" style="margin-top:16px">`;
+  GROUPS.forEach(g=>{
+    const n=PORTALS.filter(p=>p.group===g.id).length;
+    const cls=g.id==="safety"?"tile emergency-tile":"tile";
+    html+=`<button class="${cls}" data-cat="${g.id}" style="border-top-color:${g.color}">
+      <span class="cat-ic" style="--cat:${g.color};width:40px;height:40px;font-size:20px">${g.icon}</span>
+      <span class="pname">${esc(g.name)}</span>
+      <span class="pmeta">${n} option${n===1?"":"s"}</span></button>`;
+  });
+  html+=`</div><div class="sec" style="margin-top:20px"></div>`;
+  app.innerHTML=html;
+  document.querySelectorAll("[data-cat]").forEach(b=>b.addEventListener("click",()=>renderCatPortals(b.dataset.cat)));
+}
+function renderCatPortals(catId){
+  const g=groupById(catId); if(!g){ navigate("#welcome"); return; }
+  let html=`<div class="sec"><a class="linkbtn" href="#welcome">‹ Categories</a></div>
+    <div class="hero" style="margin-top:2px"><div class="row" style="align-items:center;gap:11px">
+      <span class="cat-ic" style="--cat:${g.color};width:40px;height:40px;font-size:21px">${g.icon}</span>
+      <h1 style="font-size:21px">${esc(g.name)}</h1></div>
+      <div class="small muted sub" style="margin-top:8px">Tap what's happening.</div></div>
+    <div class="grid" style="margin-top:14px">`;
+  PORTALS.filter(p=>p.group===catId).forEach(p=>{
+    const cls=catId==="safety"?"tile emergency-tile":"tile";
+    html+=`<button class="${cls}" data-portal="${p.id}" style="border-top-color:${g.color}">
+      <span class="pname">${esc(p.name)}</span><span class="pmeta">${esc(g.name)}${p.deep?" · guided":""}</span></button>`;
+  });
+  html+=`</div>`;
+  app.innerHTML=html;
+  document.querySelectorAll("[data-portal]").forEach(b=>b.addEventListener("click",()=>navigate("#funnel/"+b.dataset.portal)));
+}
+
+function buildSteps(portal){
+  let spec;
+  if(portal.deep){ spec=DEEP[portal.id](); }
+  else {
+    const issue={type:"dropdown",q:"What happened?",options:[...(portal.subtypes||[]),"Something else"],required:true};
+    const safety={type:"safety",q:portal.dangerPrompt||"Any immediate hazard right now?"};
+    const severity={type:"severity",q:"How urgent is it?"};
+    spec = portal.group==="safety" ? [safety, issue, severity] : [issue, severity];
+  }
+  const tail=[
+    {type:"location",q:"Where in the home?"},
+    {type:"details",q:"Add photos & a note"},
+    {type:"contact",q:"How can the vendor reach you?"},
+    {type:"summary",q:"Ready to send"}
+  ];
+  return spec.concat(tail);
+}
+function startFunnel(id){
+  const portal=portalById(id); if(!portal){ navigate("#welcome"); return; }
+  const c=curProp();
+  F={ portal, steps:buildSteps(portal), i:0,
+      ctx:{ answers:{}, hazard:false, urgency:null, flags:[], habitability:false, photos:[],
+            location:{property:currentProperty, unitArea:unitLabel()}, description:"",
+            contact:{ name:(RESIDENT&&RESIDENT.name)||"", phone:"", email:"" } } };
+  renderFunnel();
+}
+function visibleSteps(){ return F.steps.filter(s=>!s.when||s.when(F.ctx)); }
+function raiseUrgency(u){ if(F.ctx.urgency==null||URG[u]>URG[F.ctx.urgency]) F.ctx.urgency=u; }
+function currentStep(){ return F.steps[F.i]; }
+
+function renderFunnel(){
+  const p=F.portal, g=groupById(p.group);
+  while(F.steps[F.i] && F.steps[F.i].when && !F.steps[F.i].when(F.ctx)) F.i++;
+  const step=F.steps[F.i], vis=visibleSteps();
+  const pos=vis.indexOf(step)+1, total=vis.length;
+  const pct=Math.round(pos/total*100);
+  document.body.style.paddingBottom="100px";
+  app.innerHTML=`
+    <div class="funnel-h"><span class="dot" style="background:${g.color};width:15px;height:15px"></span>
+      <div><div style="font-weight:800">${esc(p.name)}</div>
+      <div class="small muted">${esc(curProp().label)}${F.ctx.hazard?' · <span class="hazflag">HAZARD</span>':''}</div></div></div>
+    <div class="prog-label"><span>Step ${pos} of ${total}</span><span class="pct">${pct}%</span></div>
+    <div class="prog"><span style="width:${pct}%"></span></div>
+    <div class="q">${esc(step.q)}</div>
+    <div id="stepbody">${renderStepBody(step)}</div>`;
+  wireStep(step);
+  const autoAdv=["dropdown","severity","yesno"].includes(step.type);
+  const isLast=step.type==="summary";
+  document.getElementById("actionbar-slot").innerHTML=`<div class="actionbar"><div class="wrap">
+    <button class="btn back" id="f-back">${F.i===0?"Cancel":"‹ Back"}</button>
+    <button class="btn primary" id="f-next" ${autoAdv&&!isLast?'style="display:none"':''}>${isLast?"✓ Send request":"Next"}</button>
+  </div></div>`;
+  $("#f-back").addEventListener("click", funnelBack);
+  const nb=$("#f-next"); if(nb) nb.addEventListener("click", funnelNext);
+}
+function renderStepBody(step){
+  const c=F.ctx;
+  switch(step.type){
+    case "dropdown":{
+      const cur=c.answers[step.q]||"";
+      return `<div class="opts">`+step.options.map(o=>`<label class="opt round ${cur===o?'on':''}"><span class="chk">${cur===o?'✓':''}</span><span>${esc(o)}</span><input type="radio" name="opt" value="${esc(o)}" ${cur===o?'checked':''} hidden></label>`).join("")+`</div>`;
+    }
+    case "multiselect":{
+      const cur=c.answers[step.q]||[];
+      return `<div class="opts">`+step.options.map(o=>`<label class="opt ${cur.includes(o)?'on':''}"><span class="chk">${cur.includes(o)?'✓':''}</span><span>${esc(o)}</span><input type="checkbox" value="${esc(o)}" ${cur.includes(o)?'checked':''} hidden></label>`).join("")+`</div>`;
+    }
+    case "safety":{
+      const cur=c.answers[step.q]||"";
+      return `<div class="opts">
+        <label class="opt round ${cur==='Yes'?'on':''}" style="${cur==='Yes'?'border-color:var(--emergency);background:#fdecea':''}"><span class="chk" style="${cur==='Yes'?'background:var(--emergency);border-color:var(--emergency)':''}">${cur==='Yes'?'✓':''}</span><span>Yes — hazard now</span><input type="radio" name="opt" value="Yes" ${cur==='Yes'?'checked':''} hidden></label>
+        <label class="opt round ${cur==='No'?'on':''}"><span class="chk">${cur==='No'?'✓':''}</span><span>No</span><input type="radio" name="opt" value="No" ${cur==='No'?'checked':''} hidden></label>
+      </div><div class="safety-banner ${cur==='Yes'?'':'hide'}" id="safebanner">⚠️ Make sure you and anyone nearby are safe first. This is an <b>emergency</b> — after you send this, see <a href="#emergency" style="color:#fff;text-decoration:underline">Emergency help</a> for who to call now.</div>`;
+    }
+    case "yesno":{
+      const cur=c.answers[step.q]||"";
+      return `<div class="opts">
+        <label class="opt round ${cur==='Yes'?'on':''}"><span class="chk">${cur==='Yes'?'✓':''}</span><span>Yes</span><input type="radio" name="opt" value="Yes" ${cur==='Yes'?'checked':''} hidden></label>
+        <label class="opt round ${cur==='No'?'on':''}"><span class="chk">${cur==='No'?'✓':''}</span><span>No</span><input type="radio" name="opt" value="No" ${cur==='No'?'checked':''} hidden></label></div>`;
+    }
+    case "severity":{
+      const cur=c.answers[step.q]||"";
+      const order=["emergency","urgent","soon","routine"];
+      const col={emergency:"var(--emergency)",urgent:"var(--urgent)",soon:"var(--soon)",routine:"var(--routine)"};
+      return `<div class="opts">`+order.map(v=>{const t=TIERS[v];return `<button class="sev ${cur===v?'on':''}" data-sev="${v}" style="${cur===v?'border-color:'+col[v]+';background:#fff':''}"><span class="bar" style="background:${col[v]}"></span><span><span class="t">${t.label}</span><br><span class="s">${t.window}</span></span></button>`;}).join("")+`</div>
+      <div class="small muted" style="margin-top:12px">These are our response windows — the time to confirm and assign a vendor. On-site time depends on vendor and your schedule.</div>`;
+    }
+    case "location":{
+      const l=c.location;
+      return `<div class="card lc" style="border-left-color:var(--sage-d);margin-bottom:6px"><div style="font-weight:750">${esc(curProp().label)}</div><div class="small muted">${esc(curProp().city)}</div></div>
+        <label class="field">Which room or area? <span class="muted">(optional)</span></label>
+        <input class="inp" id="loc-unit" value="${esc(l.unitArea)}" placeholder="e.g. kitchen, upstairs bath, my bedroom, garage">`;
+    }
+    case "details":{
+      return `<label class="field" style="margin-top:0">Photos <span class="muted">(a photo helps us route it right)</span></label>
+        <div class="photo-add" id="photos">
+          ${c.photos.map((s,i)=>`<img class="thumb" src="${s}" data-idx="${i}">`).join("")}
+          <label class="photo-btn">📷<span>Add</span><input type="file" accept="image/*" capture="environment" multiple id="photo-input" hidden></label>
+        </div>
+        <label class="field">Note <span class="muted">(optional)</span></label>
+        <textarea class="inp" id="desc" placeholder="What you see, when it started, anything you've tried.">${esc(c.description)}</textarea>
+        <label class="field">Is your home unusable right now?</label>
+        <div class="toggle" id="habit">
+          <button data-h="no" class="${c.habitability?'':'on'}">No, still usable</button>
+          <button data-h="yes" class="danger ${c.habitability?'on':''}">Yes, unusable</button>
+        </div>`;
+    }
+    case "contact":{
+      const a=c.contact;
+      return `<div class="small muted" style="margin:0 0 6px">So the property manager and vendor can reach you to schedule. Any roommate may submit for the house.</div>
+        <label class="field">Your name</label><input class="inp" id="af-name" value="${esc(a.name)}" placeholder="Full name">
+        <label class="field">Phone</label><input class="inp" id="af-phone" type="tel" value="${esc(a.phone)}" placeholder="(555) 555-5555">
+        <label class="field">Email</label><input class="inp" id="af-email" type="email" value="${esc(a.email)}" placeholder="you@email.com">`;
+    }
+    case "summary":{
+      const r=draftReport(), pv=buildAutoSummary(r,F.portal), t=TIERS[r.urgency]||TIERS.routine;
+      return `<div class="card lc" style="border-left-color:${groupById(F.portal.group).color}">
+        <div style="font-weight:800;font-size:16px;line-height:1.35;margin-bottom:8px">${esc(pv)}</div>
+        <div class="small">${r.hazard?'<span class="hazflag">HAZARD</span>':''}${r.habitabilityImpact?'<span class="flagpill">HOME UNUSABLE</span>':''}<span class="chip ${r.urgency}">${esc(t.label)}</span></div>
+        <div class="small muted" style="margin-top:8px">${esc(curProp().label)} ${esc(c.location.unitArea)} · ${c.photos.length} photo(s)</div>
+        <div class="small" style="margin-top:8px">Expected response: <b>${esc(t.window)}</b></div>
+      </div>
+      <div class="small muted">Tap <b>Send request</b>. You'll get an automatic acknowledgement, then we approve it and connect you with the vendor.</div>`;
+    }
+  }
+  return "";
+}
+function wireStep(step){
+  const c=F.ctx;
+  if(step.type==="dropdown"||step.type==="yesno"){
+    app.querySelectorAll('input[name="opt"]').forEach(r=>r.addEventListener("change",()=>{ c.answers[step.q]=r.value; markAndAdvance(step); }));
+  }
+  if(step.type==="safety"){
+    app.querySelectorAll('input[name="opt"]').forEach(r=>r.addEventListener("change",()=>{
+      c.answers[step.q]=r.value;
+      app.querySelectorAll(".opt").forEach(o=>{const on=o.querySelector("input").checked;o.classList.toggle("on",on);const k=o.querySelector(".chk");if(k)k.textContent=on?'✓':'';});
+      const b=$("#safebanner"); if(b) b.classList.toggle("hide", r.value!=="Yes");
+      if(r.value==="No"){ setTimeout(()=>{ if(collectStep(step)) advance(); },160); } else { showNext(); }
+    }));
+  }
+  if(step.type==="severity"){
+    app.querySelectorAll("[data-sev]").forEach(btn=>btn.addEventListener("click",()=>{ c.answers[step.q]=btn.dataset.sev; markAndAdvance(step); }));
+  }
+  if(step.type==="multiselect"){
+    app.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.addEventListener("change",()=>{
+      c.answers[step.q]=[...app.querySelectorAll("input[type=checkbox]:checked")].map(x=>x.value);
+      app.querySelectorAll(".opt").forEach(o=>{const on=o.querySelector("input").checked;o.classList.toggle("on",on);o.querySelector(".chk").textContent=on?'✓':'';});
+    }));
+  }
+  if(step.type==="details"){
+    $("#photo-input").addEventListener("change",e=>readPhotos(e.target.files,arr=>{ c.photos.push(...arr); renderFunnel(); }));
+    app.querySelectorAll(".thumb").forEach(img=>img.addEventListener("click",()=>{ c.photos.splice(+img.dataset.idx,1); renderFunnel(); }));
+    app.querySelectorAll("#habit button").forEach(b=>b.addEventListener("click",()=>{
+      c.habitability=b.dataset.h==="yes";
+      app.querySelectorAll("#habit button").forEach(x=>x.classList.toggle("on",x.dataset.h===b.dataset.h));
+    }));
+  }
+}
+function showNext(){ const nb=$("#f-next"); if(nb) nb.style.display=""; }
+function markAndAdvance(step){
+  app.querySelectorAll(".opt").forEach(o=>{const inp=o.querySelector("input");if(inp){const on=inp.checked;o.classList.toggle("on",on);const chk=o.querySelector(".chk");if(chk)chk.textContent=on?'✓':'';}});
+  app.querySelectorAll(".sev").forEach(s=>s.classList.toggle("on",s.dataset.sev===F.ctx.answers[step.q]));
+  setTimeout(()=>{ if(collectStep(step)) advance(); },170);
+}
+function advance(){ do{ F.i++; }while(F.steps[F.i]&&F.steps[F.i].when&&!F.steps[F.i].when(F.ctx)); renderFunnel(); }
+function collectStep(step){
+  const c=F.ctx, key=step.q, ans=c.answers[key];
+  if(step.type==="location"){ c.location={property:currentProperty, unitArea:($("#loc-unit").value||"").trim()}; }
+  if(step.type==="details"){ c.description=($("#desc").value||"").trim(); }
+  if(step.type==="contact"){ c.contact={ name:($("#af-name").value||"").trim(), phone:($("#af-phone").value||"").trim(), email:($("#af-email").value||"").trim() }; }
+  if(step.required && (step.type==="dropdown"||step.type==="safety"||step.type==="yesno") && !ans){ alert("Pick one to continue."); return false; }
+  if(step.required && step.type==="multiselect" && (!ans||!ans.length)){ alert("Tap at least one."); return false; }
+  if(step.type==="safety" && ans==="Yes"){ c.hazard=true; raiseUrgency("emergency"); }
+  if(step.type==="yesno" && ans==="Yes"){
+    if(step.urgencyIfYes) raiseUrgency(step.urgencyIfYes);
+    if(step.flagIfYes && !c.flags.includes(step.flagIfYes)) c.flags.push(step.flagIfYes);
+  }
+  if(step.type==="severity" && ans==="emergency"){ c.hazard=true; }
+  if(step.type==="severity" && ans){ raiseUrgency(ans); }
+  if(step.setsUrgency && ans){ const u=step.setsUrgency(ans); if(u) raiseUrgency(u); }
+  return true;
+}
+function funnelBack(){
+  if(F.i===0){ if(confirm("Discard this request?")){ F=null; navigate("#welcome"); } return; }
+  do{ F.i--; }while(F.i>0 && F.steps[F.i].when && !F.steps[F.i].when(F.ctx));
+  renderFunnel();
+}
+function funnelNext(){
+  const step=currentStep();
+  if(!collectStep(step)) return;
+  if(step.type==="summary") return submitRequest();
+  advance();
+}
+function readPhotos(files,cb){
+  const list=Array.from(files); if(!list.length) return cb([]);
+  const arr=[]; let done=0;
+  list.forEach(f=>{ compressImage(f,dataUrl=>{ if(dataUrl) arr.push(dataUrl); if(++done===list.length) cb(arr); }); });
+}
+function compressImage(file, cb, maxDim=1600, quality=0.72){
+  const draw=(src,w,h)=>{
+    let nw=w, nh=h;
+    if(Math.max(w,h)>maxDim){ const s=maxDim/Math.max(w,h); nw=Math.round(w*s); nh=Math.round(h*s); }
+    const cv=document.createElement("canvas"); cv.width=nw; cv.height=nh;
+    cv.getContext("2d").drawImage(src,0,0,nw,nh);
+    return cv.toDataURL("image/jpeg", quality);
+  };
+  const fallback=()=>{ const rd=new FileReader();
+    rd.onload=e=>{ const img=new Image();
+      img.onload=()=>{ try{ cb(draw(img,img.naturalWidth,img.naturalHeight)); }catch(err){ cb(e.target.result); } };
+      img.onerror=()=>cb(e.target.result); img.src=e.target.result; };
+    rd.onerror=()=>cb(null); rd.readAsDataURL(file); };
+  if(window.createImageBitmap){
+    createImageBitmap(file,{imageOrientation:"from-image"}).then(bmp=>{
+      let out; try{ out=draw(bmp,bmp.width,bmp.height); }catch(e){ out=null; }
+      if(bmp.close) bmp.close();
+      out?cb(out):fallback();
+    }).catch(fallback);
+  } else fallback();
+}
+function draftReport(){
+  const c=F.ctx, p=F.portal;
+  return { id:"draft", category:p.group, portal:p.id, portalName:p.name, createdAt:new Date().toISOString(),
+    urgency:c.urgency||"routine", hazard:c.hazard, habitabilityImpact:c.habitability, flags:c.flags.slice(),
+    answers:Object.entries(c.answers).map(([q,a])=>({q,a:Array.isArray(a)?a.join(", "):a})),
+    autoSummary:"", photos:c.photos.slice(), location:{...c.location},
+    contact:(c.contact.name||c.contact.phone||c.contact.email)?{...c.contact}:null,
+    description:c.description, status:"submitted" };
+}
+function buildAutoSummary(r,portal){
+  const loc=r.location.unitArea||propLabel(r.location.property)||"home";
+  const bits=r.answers.filter(x=>x.a && x.a!=="Yes" && x.a!=="No" && !/how urgent|hazard|unusable|check the air/i.test(x.q)).slice(0,2).map(x=>x.a);
+  const t=(TIERS[r.urgency]||TIERS.routine).label.toLowerCase();
+  return `${portal.name} — ${loc}${bits.length?", "+bits.join(", "):""}, ${r.photos.length} photo${r.photos.length===1?"":"s"}, ${t}`;
+}
+function submitRequest(){
+  const r=draftReport(); r.id=uid("req"); r.autoSummary=buildAutoSummary(r,F.portal);
+  const st=store.get(); st.reports.push(r); persist();
+  sendRequest(r);
+  F=null; celebrate(()=>navigate("#request/"+r.id));
+}
+const CELEB=[
+  {t:"Request sent! 🎉", s:"You'll get an automatic acknowledgement shortly."},
+  {t:"Got it — we're on it! 💪", s:"The property manager will review and assign a vendor."},
+  {t:"Thanks for the heads-up! 🙌", s:"Reporting early keeps small problems small."},
+  {t:"Sent and logged! ✨", s:"We'll be in touch with next steps."}
+];
+function celebrate(done){
+  const slot=document.getElementById("modal-slot");
+  const m=CELEB[Math.floor(Math.random()*CELEB.length)];
+  slot.innerHTML=`<div class="overlay celebrate" id="celeb">
+    <div class="celeb-card"><div class="celeb-check">✓</div>
+    <div class="celeb-title">${esc(m.t)}</div><div class="celeb-sub">${esc(m.s)}</div></div></div>`;
+  let closed=false;
+  const close=()=>{ if(closed) return; closed=true; slot.innerHTML=""; if(done) done(); };
+  const ov=document.getElementById("celeb"); if(ov) ov.addEventListener("click",close);
+  setTimeout(close,1900);
+}
+
+/* ============================================================================
+   REQUESTS (resident's own saved requests)
+   ========================================================================== */
+function sortReports(list){ return list.slice().sort((a,b)=> a.urgency!==b.urgency ? URG[b.urgency]-URG[a.urgency] : new Date(b.createdAt)-new Date(a.createdAt)); }
+function reportRow(r){
+  const g=groupById(r.category), t=TIERS[r.urgency]||TIERS.routine;
+  return `<div class="card lc" data-request="${r.id}" style="border-left-color:${g.color};cursor:pointer">
+    <div class="row"><span class="badge" style="background:${g.color}">${esc(g.name.split(" ")[0])}</span>
+      <div style="flex:1;min-width:0"><div style="font-weight:750;line-height:1.3">${r.hazard?'<span class="hazflag">⚠</span>':''}${esc(r.autoSummary)}</div>
+      <div class="small muted" style="margin-top:3px">${esc(r.location.unitArea||curProp().label)} · ${fmtDateTime(r.createdAt)} · ${esc(r.status)}</div></div>
+      <span class="chip ${r.urgency}">${esc(t.label)}</span></div></div>`;
+}
+function wireReportRows(){ document.querySelectorAll("[data-request]").forEach(el=>el.addEventListener("click",()=>navigate("#request/"+el.dataset.request))); }
+function renderRequests(){
+  const list=sortReports(store.get().reports.filter(r=>r.location.property===currentProperty));
+  let html=`<div class="sec"><a class="linkbtn" href="#home">‹ Home</a></div>
+    <div class="hero" style="margin-top:2px"><h1 style="font-size:23px">Your requests</h1>
+      <div class="small muted sub">At ${esc(curProp().label)}.</div></div>`;
+  html += list.length ? list.map(reportRow).join("") : `<div class="empty">No requests yet. <a class="linkbtn" href="#welcome">Report an issue →</a></div>`;
+  app.innerHTML=html;
+  document.body.style.paddingBottom="100px";
+  document.getElementById("actionbar-slot").innerHTML=`<div class="actionbar"><div class="wrap"><button class="btn primary block" id="new-req">🛠️ Report a new issue</button></div></div>`;
+  $("#new-req").addEventListener("click",()=>navigate("#welcome"));
+  wireReportRows();
+}
+function renderRequestDetail(id){
+  const r=store.get().reports.find(x=>x.id===id); if(!r){ navigate("#requests"); return; }
+  const g=groupById(r.category), t=TIERS[r.urgency]||TIERS.routine;
+  let html=`<div class="sec"><a class="linkbtn" href="#requests">‹ Your requests</a></div>
+    <div class="card lc" style="border-left-color:${g.color}">
+      <div class="row" style="align-items:center"><span class="badge" style="background:${g.color}">${esc(g.name)}</span><div class="spacer" style="flex:1"></div><span class="chip ${r.urgency}">${esc(t.label)}</span></div>
+      <h2 style="margin:10px 0 4px;font-size:19px">${esc(r.portalName)}</h2>
+      <div class="small muted">${fmtDateTime(r.createdAt)} · ${esc(curProp().label)} ${esc(r.location.unitArea)}</div>
+      <div style="margin-top:8px">${r.hazard?'<span class="hazflag">HAZARD</span>':''}${r.habitabilityImpact?'<span class="flagpill">HOME UNUSABLE</span>':''}</div>
+      <div class="small" style="margin-top:8px">Expected response: <b>${esc(t.window)}</b></div>
+    </div>`;
+  if(r.hazard){
+    html+=`<div class="embar"><div class="et">🚨 This looks like an emergency</div>
+      <div class="es">If it's a life-safety issue, call 911 first. Then open Emergency help for who to call now.</div>
+      <a class="btn block" style="margin-top:10px;background:#fff;color:var(--emergency);border:0" href="#emergency">Open Emergency help →</a></div>`;
+  }
+  html+=`<div class="sec"><h2>What happens next</h2></div><div class="card"><ol class="steps">`+
+    WORKFLOW.map(([st,sd])=>`<li><div class="st">${esc(st)}</div><div class="sd">${esc(sd)}</div></li>`).join("")+`</ol></div>`;
+
+  html+=`<div class="sec"><h2>What you told us</h2></div><div class="card">`;
+  r.answers.forEach(qa=>html+=`<div class="kv"><span class="k">${esc(qa.q)}</span><span class="v">${esc(qa.a)}</span></div>`);
+  if(r.description) html+=`<div style="padding-top:10px" class="small">${esc(r.description)}</div>`;
+  html+=`</div>`;
+  if(r.photos.length) html+=`<div class="sec"><h2>Photos (${r.photos.length})</h2></div><div class="gallery">`+r.photos.map(s=>`<img class="thumb" src="${s}" data-full="${s}">`).join("")+`</div>`;
+
+  html+=`<div class="sec"><h2>Official channels</h2></div><div class="card">
+    <div class="small muted" style="margin-bottom:10px">All requests go through these channels — not calls or texts to owners.</div>
+    <a class="btn block" href="${OFFICIAL.formUrl}" target="_blank" rel="noopener">Maintenance Request Form ↗</a>
+    <a class="btn block" style="margin-top:9px" href="mailto:${OFFICIAL.inbox}">✉️ ${esc(OFFICIAL.inbox)}</a></div>`;
+
+  app.innerHTML=html;
+  document.querySelectorAll("[data-full]").forEach(img=>img.addEventListener("click",()=>showImage(img.dataset.full)));
+}
+function showImage(src){ const slot=document.getElementById("modal-slot"); slot.innerHTML=`<div class="overlay" id="imgov"><img src="${src}"></div>`; $("#imgov").addEventListener("click",()=>slot.innerHTML=""); }
+
+/* ============================================================================
+   LEASE & UTILITIES (per unit)
+   ========================================================================== */
+function renderLease(){
+  const p=curProp(), L=p.lease;
+  const utilRow=(k,v)=>`<div class="kv"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></div>`;
+  let html=`<div class="hero" style="margin-bottom:6px"><h1 style="font-size:23px">My lease & utilities</h1>
+    <div class="small muted sub">${esc(p.label)}${p.city?" · "+esc(p.city):""}${p.type?" · "+esc(p.type):""}. Your signed lease is the final word — this is a quick reference.</div></div>`;
+  if(p.generic){
+    html+=`<div class="card" style="background:#fdf3e7;border-color:#eddcc2">
+      <div class="rr-k" style="color:var(--urgent)">We couldn't match your address</div>
+      <div class="small" style="margin-top:6px;line-height:1.45">You entered “${esc((RESIDENT&&RESIDENT.propertyText)||"")}”. We couldn't match it to our records, so this shows general guidance. <a class="linkbtn" href="#gate">Check your address</a> or email <a href="mailto:${OFFICIAL.inbox}">${esc(OFFICIAL.inbox)}</a>.</div></div>`;
+  }
+  html+=`<div class="sec"><span class="sec-ic">🔌</span><h2>Utilities you set up & pay</h2></div><div class="card">`;
+  if(p.tenantPays.length){
+    p.tenantPays.forEach(([u,prov])=>{ html+=`<div class="rr"><span class="rr-ic">•</span><div><div class="rr-v">${esc(u)}</div>${prov?`<div class="rr-k" style="text-transform:none;letter-spacing:0;font-weight:600;color:var(--muted);margin-top:2px">Provider: ${esc(prov)}</div>`:""}</div></div>`; });
+  } else {
+    html+=`<div class="small muted">Which utilities you pay is set by your lease. Check your signed lease, or ask us at <a href="mailto:${OFFICIAL.inbox}">${esc(OFFICIAL.inbox)}</a>.</div>`;
+  }
+  html+=`</div>`;
+  if(p.landlordCovers.length){
+    html+=`<div class="sec"><span class="sec-ic">🏢</span><h2>Covered by the owner</h2></div><div class="card">
+      ${p.landlordCovers.map(x=>`<div class="rr"><span class="rr-ic">✓</span><div class="rr-v">${esc(x)}</div></div>`).join("")}</div>`;
+  }
+  html+=`<div class="sec"><span class="sec-ic">💵</span><h2>Rent, fees & terms</h2></div><div class="card">
+    ${utilRow("Late fee", L.lateFee)}
+    ${utilRow("Grace period", L.grace)}
+    ${utilRow("Returned-payment (NSF) fee", L.nsf)}
+    ${utilRow("Security deposit", L.deposit)}
+    ${utilRow("Renter's insurance", L.insurance)}
+    ${utilRow("Pets", L.pets)}
+    ${utilRow("Managed for", p.owner)}
+  </div>`;
+  if(L.extra&&L.extra.length){
+    html+=`<div class="card" style="background:var(--sage-tint);border-color:#d8e6dd">
+      <div class="rr-k" style="color:var(--sage-d)">Good to know about your home</div>
+      <ul style="margin:8px 0 0;padding-left:20px">${L.extra.map(x=>`<li style="margin-bottom:6px">${esc(x)}</li>`).join("")}</ul></div>`;
+  }
+  html+=`<div class="sec"><span class="sec-ic">📅</span><h2>Entry & inspections</h2></div><div class="card small" style="line-height:1.5">
+    We may inspect your home up to ~4 times a year (about quarterly) with at least <b>24 hours' written notice</b> through the official channels. In a true emergency we may enter without advance notice. Your lease controls if there's any conflict.</div>
+
+    <div class="sec"><span class="sec-ic">🛡️</span><h2>Renter's insurance</h2></div><div class="card small" style="line-height:1.5">
+    You're required to keep renter's insurance for the whole lease term and show proof on request. The owner's policy does <b>not</b> cover your personal belongings. On a joint lease, each roommate should confirm their own coverage.</div>`;
+  app.innerHTML=html;
+  document.body.style.paddingBottom="100px";
+  document.getElementById("actionbar-slot").innerHTML=`<div class="actionbar"><div class="wrap">
+    <a class="btn block" href="#responsibility">✅ Who fixes what</a>
+    <a class="btn primary block" href="#welcome">🛠️ Report an issue</a></div></div>`;
+}
+
+/* ============================================================================
+   EMERGENCY HELP
+   ========================================================================== */
+function renderEmergency(){
+  const p=curProp(), area=p.area, vendors=area?(EMERGENCY_VENDORS[area]||[]):[];
+  let html=`<div class="hero" style="margin-bottom:4px"><h1 style="font-size:23px" >🚨 Emergency help</h1>
+    <div class="small muted sub">For ${esc(p.label)}. An emergency is anything that threatens life, health, or major property damage within hours.</div></div>
+
+    <div class="embar"><div class="et">Life-threatening? Call 911 first.</div>
+      <div class="es">Then submit a request and note that it's an emergency.</div>
+      <a class="btn block" style="margin-top:10px;background:#fff;color:var(--emergency);border:0" href="tel:911">📞 Call 911</a></div>
+
+    <div class="sec"><h2>What to do right now</h2></div>
+    <div class="card"><ul style="margin:0;padding-left:20px;line-height:1.5">
+      <li style="margin-bottom:8px"><b>Active water leak:</b> shut off the water at the main if you know where it is, then call the plumber below and submit a request.</li>
+      <li style="margin-bottom:8px"><b>No heat in winter / no AC over 90°F:</b> call the HVAC vendor below, then submit a request.</li>
+      ${p.gas?`<li style="margin-bottom:8px"><b>Gas smell:</b> leave the home, then call ${esc(OFFICIAL.gasEmergency.name)} at <a href="${telHref(OFFICIAL.gasEmergency.phone)}">${esc(OFFICIAL.gasEmergency.phone)}</a> (or 911), then submit a request.</li>`:`<li style="margin-bottom:8px"><b>Gas smell:</b> leave the home and call 911 or your gas provider's emergency line, then submit a request.</li>`}
+      <li style="margin-bottom:8px"><b>Electrical hazard, sparking, or burning smell:</b> cut power at the breaker if safe, call the electrician below, then submit a request.</li>
+      <li style="margin-bottom:8px"><b>Sewage backup:</b> stop using water, keep the area clear, call the plumber/septic vendor, then submit a request.</li>
+      <li><b>Lockout:</b> if you can't reach us, you may call a licensed locksmith. We reimburse reasonable, non-tenant-caused lockout costs if you tell us within 24 hours.</li>
+    </ul></div>
+
+    <div class="sec"><h2>Approved emergency contacts</h2></div>
+    <div class="small muted" style="margin:0 2px 10px">You may call these directly in a true emergency. For everything else, submit a request and we'll assign the vendor.</div>`;
+  if(!vendors.length){
+    html+=`<div class="call-card" style="background:#fdf3e7;border-color:#eddcc2"><div class="small" style="line-height:1.45">We couldn't match your address to a service area, so we can't show your assigned contacts. Call 911 for anything life-threatening, then email <a href="mailto:${OFFICIAL.inbox}">${esc(OFFICIAL.inbox)}</a>. <a class="linkbtn" href="#gate">Check your address →</a></div></div>`;
+  }
+  vendors.forEach(v=>{
+    html+=`<div class="call-card"><div class="row" style="align-items:center">
+      <div style="flex:1"><div class="cc-name">${esc(v.name)}</div><div class="cc-trade">${esc(v.trade)} · ${esc(v.phone)}</div></div>
+      <a class="btn sm primary" href="${telHref(v.phone)}">📞 Call</a></div></div>`;
+  });
+  html+=`<div class="call-card" style="background:var(--sage-tint);border-color:#d8e6dd"><div class="row" style="align-items:center">
+      <div style="flex:1"><div class="cc-name">Property manager (monitored inbox)</div><div class="cc-trade">Mon–Fri, business hours</div></div>
+      <a class="btn sm" href="mailto:${OFFICIAL.inbox}">✉️ Email</a></div></div>
+
+    <div class="card small" style="line-height:1.5;margin-top:6px">Always report the emergency through the app or the <a href="${OFFICIAL.formUrl}" target="_blank" rel="noopener">Maintenance Request Form</a> too, so there's a record and we can approve the work. Vendors can't perform billable work without an approved ticket.</div>`;
+  app.innerHTML=html;
+  document.body.style.paddingBottom="100px";
+  document.getElementById("actionbar-slot").innerHTML=`<div class="actionbar"><div class="wrap"><button class="btn primary block" id="em-report">🛠️ Submit an emergency request</button></div></div>`;
+  $("#em-report").addEventListener("click",()=>navigate("#welcome"));
+}
+
+/* ============================================================================
+   HANDBOOK (reference accordion)
+   ========================================================================== */
+function acc(title,icon,body){ return `<details class="acc"><summary><span>${icon}</span>${esc(title)}</summary><div class="body">${body}</div></details>`; }
+function renderHandbook(){
+  const respTable=RESP.map(item=>{const v=respVerdict(item),m=verdictMeta(v);
+    return `<li><b>${esc(item.name)}</b> — <span style="color:var(--${m.cls});font-weight:700">${esc(m.label)}</span><br><span class="small muted">You: ${esc(item.tenant)} · Owner: ${esc(item.landlord)}</span></li>`;}).join("");
+  let html=`<div class="hero" style="margin-bottom:8px"><h1 style="font-size:23px">Resident handbook</h1>
+    <div class="small muted sub">Silver Star Capital Tenant Handbook & Service Protocol — key points. This supplements, but does not replace, your signed lease. In any conflict, the lease controls.</div></div>`;
+
+  html+=acc("How to reach us","📮",
+    `<p>All maintenance and communication go through one channel — please don't text personal numbers or email owners directly.</p>
+     <ul><li><b>Maintenance Request Form</b> (start here for everything): <a href="${OFFICIAL.formUrl}" target="_blank" rel="noopener">${OFFICIAL.formUrl}</a></li>
+     <li><b>Monitored inbox</b>: <a href="mailto:${OFFICIAL.inbox}">${OFFICIAL.inbox}</a> — Mon–Fri, business hours. Also where vendors send invoices.</li></ul>
+     <p>Text messages, social media, and verbal conversations aren't official notice unless acknowledged in writing through these channels.</p>`);
+
+  html+=acc("How a request moves","🔄",
+    `<ol class="steps" style="margin-top:4px">`+WORKFLOW.map(([s,d])=>`<li><div class="st">${esc(s)}</div><div class="sd">${esc(d)}</div></li>`).join("")+`</ol>
+     <p class="small muted" style="margin-top:10px">Don't arrange billable work on your own — vendors won't perform billable work without an approved ticket on file.</p>`);
+
+  html+=acc("Response times","⏱️",
+    `<ul>${Object.keys(TIERS).map(k=>`<li><b>${esc(TIERS[k].label)}</b> — ${esc(TIERS[k].window)}</li>`).join("")}</ul>
+     <p class="small muted">The response window is the time to confirm and assign a vendor. On-site time depends on vendor availability and your schedule.</p>`);
+
+  html+=acc("Emergency procedures","🚨",
+    `<p>Anything that threatens life, health, or significant property damage within hours. Call 911 for life-threatening situations first.</p>
+     <p><a class="linkbtn" href="#emergency">Open Emergency help for your home →</a></p>
+     <p class="small muted">Report any condition that could cause damage — leaks, plumbing/appliance failures, mold, broken windows, storm damage, electrical concerns — promptly. Failing to report a known issue that leads to more damage can make you responsible for the added cost.</p>`);
+
+  html+=acc("Who fixes what","🧰",
+    `<p>A practical guide — your lease controls in any conflict. <a class="linkbtn" href="#responsibility">Open the interactive guide →</a></p><ul style="line-height:1.45">${respTable}</ul>`);
+
+  html+=acc("Rent, payments & fees","💵",
+    `<p>Rent is due per your signed lease, with the grace period and late/NSF fees stated there. Because each home is individually owned, the payment method is set by your lease and the owner.</p>
+     <p>Every payment is recorded. For a ledger, email the monitored inbox and we'll send it within three business days.</p>`);
+
+  html+=acc("Move-in & move-out","📦",
+    `<p>Coordinated by ${esc(OFFICIAL.moveContact)} — schedule at least two weeks ahead through the monitored inbox.</p>
+     <p>A written and photographic condition report is required at both move-in and move-out; flag any discrepancies in writing within seven days of move-in. Deposits are returned per Tennessee law within 30 days of move-out with an itemized statement. On a joint lease, the deposit is handled for the household as a whole.</p>`);
+
+  html+=acc("Inspections & entry","📅",
+    `<p>We may inspect up to ~4 times a year (about quarterly) with at least 24 hours' written notice through the official channels. You're welcome to be present. In an immediate emergency we may enter without advance notice. Your lease controls in any conflict.</p>`);
+
+  html+=acc("House rules","🏠",
+    `<ul>
+      <li>Only people named on the lease may occupy the home. Guests over 14 consecutive days / 30 days a year need written consent.</li>
+      <li>In shared homes, keep common areas (kitchen, living areas, yard, trash) clean and clear — roommates share responsibility.</li>
+      <li>Pets only as expressly permitted by your lease and any pet addendum.</li>
+      <li>No structural, paint, or exterior changes, and no wall-mounted fixtures, without written approval. Normal picture hanging is fine.</li>
+      <li>No smoking inside. Quiet hours 10:00 PM – 7:00 AM.</li>
+      <li>Rooftop decks (if any): keep clear, secure loose items before high winds, don't overload or block access; grills/open flames only if your lease allows.</li>
+    </ul>`);
+
+  html+=acc("Insurance","🛡️",
+    `<p>Renter's insurance is required for the whole lease term, with proof on request. The owner's policy doesn't cover your personal property. On a joint lease, each roommate should confirm coverage as required by the lease.</p>`);
+
+  app.innerHTML=html;
+}
+
+/* ============================================================================
+   BOOT
+   ========================================================================== */
+document.getElementById("emrg-btn").addEventListener("click",()=>navigate("#emergency"));
+document.getElementById("wb-edit").addEventListener("click",()=>navigate("#gate"));
+["hlogo","brand-home"].forEach(id=>{ const el=document.getElementById(id); if(!el) return;
+  el.addEventListener("click",()=>navigate(RESIDENT?"#home":"#gate"));
+  el.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); navigate(RESIDENT?"#home":"#gate"); } });
+});
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>navigate(t.dataset.nav)));
+
+if(currentProperty && !propById(currentProperty)) currentProperty="";
+route();
+</script>
+</body>
+</html>
