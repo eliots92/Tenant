@@ -313,9 +313,80 @@ button,a,.tile,.opt,.sev,.act,.resp-tile,.prop-btn{-webkit-tap-highlight-color:t
 @keyframes ringPulse{0%{box-shadow:0 0 0 0 rgba(60,90,76,.4)}100%{box-shadow:0 0 0 22px rgba(60,90,76,0)}}
 @keyframes riseIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.celeb-card,.celeb-check,.celeb-title,.celeb-sub{animation:none!important}.hbtn::before{animation:none}}
+
+/* ============================================================================
+   DYNAMIC LAYER — ambient motion background, view transitions, live home,
+   interactive seasonal checklist. All motion respects prefers-reduced-motion.
+   ========================================================================== */
+html{background:var(--paper)} body{background:transparent}
+.ambient{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+.ambient i{position:absolute;display:block;border-radius:50%;filter:blur(72px);opacity:.6;will-change:transform}
+.ambient .b1{width:72vw;height:72vw;max-width:560px;max-height:560px;left:-16vw;top:-14vh;
+  background:radial-gradient(circle at 50% 50%,color-mix(in srgb,var(--accent) 30%,transparent),transparent 68%);animation:drift1 26s ease-in-out infinite alternate}
+.ambient .b2{width:66vw;height:66vw;max-width:520px;max-height:520px;right:-20vw;top:4vh;
+  background:radial-gradient(circle at 50% 50%,color-mix(in srgb,var(--forest) 26%,transparent),transparent 70%);animation:drift2 34s ease-in-out infinite alternate}
+.ambient .b3{width:60vw;height:60vw;max-width:480px;max-height:480px;left:22vw;bottom:-26vh;
+  background:radial-gradient(circle at 50% 50%,color-mix(in srgb,var(--ochre) 22%,transparent),transparent 72%);animation:drift3 40s ease-in-out infinite alternate}
+@keyframes drift1{from{transform:translate(0,0) scale(1)}to{transform:translate(8vw,6vh) scale(1.14)}}
+@keyframes drift2{from{transform:translate(0,0) scale(1.06)}to{transform:translate(-7vw,8vh) scale(.94)}}
+@keyframes drift3{from{transform:translate(0,0) scale(1)}to{transform:translate(6vw,-6vh) scale(1.12)}}
+
+/* View entrance transitions (retriggered per route) */
+#app.viewin{animation:viewIn .34s cubic-bezier(.2,.8,.2,1) both}
+@keyframes viewIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+#app.stagger>*{animation:riseChild .52s cubic-bezier(.2,.8,.2,1) both}
+@keyframes riseChild{from{opacity:0;transform:translateY(13px)}to{opacity:1;transform:none}}
+#app.stagger>*:nth-child(1){animation-delay:.03s}
+#app.stagger>*:nth-child(2){animation-delay:.08s}
+#app.stagger>*:nth-child(3){animation-delay:.13s}
+#app.stagger>*:nth-child(4){animation-delay:.18s}
+#app.stagger>*:nth-child(5){animation-delay:.23s}
+#app.stagger>*:nth-child(6){animation-delay:.28s}
+#app.stagger>*:nth-child(7){animation-delay:.33s}
+#app.stagger>*:nth-child(n+8){animation-delay:.38s}
+
+/* Live open-requests strip */
+.livestrip{display:flex;align-items:center;gap:12px;background:var(--surface-hi);border:1px solid var(--line);border-left:3px solid var(--accent);
+  border-radius:13px;padding:12px 15px;box-shadow:var(--shadow);margin-top:16px;cursor:pointer;transition:transform .14s ease,border-color .16s ease}
+.livestrip:active{transform:scale(.99)}
+.livestrip .ls-n{font-family:var(--serif);font-size:24px;font-weight:500;line-height:1;color:var(--accent-d);font-variant-numeric:tabular-nums;min-width:24px;text-align:center}
+.livestrip .ls-t{font-weight:600;font-size:15px} .livestrip .ls-s{font-size:12px;color:var(--muted);margin-top:1px}
+.livestrip .pulse{width:9px;height:9px;border-radius:50%;background:var(--accent);margin-left:auto;flex:0 0 auto;
+  box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 60%,transparent);animation:pulse 2s ease-out infinite}
+
+/* Personalized seasonal tip */
+.tipcard{position:relative;overflow:hidden;display:flex;gap:14px;align-items:flex-start;margin-top:14px;
+  background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 13%,var(--surface-hi)) 0%,var(--surface-hi) 60%);
+  border:1px solid var(--line-2);border-radius:18px;padding:16px 17px;box-shadow:var(--shadow)}
+.tipcard .tem{font-size:27px;line-height:1;flex:0 0 auto;margin-top:1px}
+.tipcard .tk{font-size:10.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--accent-d)}
+.tipcard .tt{font-family:var(--serif);font-size:17px;line-height:1.3;margin-top:4px}
+
+/* Interactive seasonal home-care checklist */
+.care{background:var(--surface-hi);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+.care .care-h{display:flex;align-items:center;gap:12px;padding:15px 16px 11px}
+.care .care-h .ch-t{font-family:var(--serif);font-weight:500;font-size:16px}
+.care .care-h .ch-c{margin-left:auto;font-size:12px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+.care .bar{height:4px;background:var(--line);margin:0 16px;border-radius:4px;overflow:hidden}
+.care .bar>span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--forest),var(--accent));border-radius:4px;transition:width .5s cubic-bezier(.2,.8,.2,1)}
+.care ul{list-style:none;margin:6px 0 4px;padding:6px 8px 8px}
+.care li{display:flex;align-items:center;gap:13px;padding:11px 10px;border-radius:11px;cursor:pointer;transition:background .15s ease}
+.care li:hover{background:var(--paper-2)} .care li:active{background:var(--paper-2)}
+.care li .box{width:24px;height:24px;border-radius:8px;border:1.5px solid var(--line-2);flex:0 0 auto;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;transition:background .16s ease,border-color .16s ease,transform .16s cubic-bezier(.2,.9,.2,1.4)}
+.care li.done .box{background:var(--forest);border-color:var(--forest);transform:scale(1.06)}
+.care li .lbl{font-weight:500;line-height:1.35}
+.care li.done .lbl{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--line-2)}
+.care .alldone{padding:2px 16px 14px;color:var(--forest);font-weight:600;font-size:13px}
+
+@media (prefers-reduced-motion:reduce){
+  .ambient i{animation:none!important}
+  #app.viewin,#app.stagger>*{animation:none!important;opacity:1!important;transform:none!important}
+  .livestrip .pulse{animation:none}
+}
 </style>
 </head>
 <body>
+<div class="ambient" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i></div>
 <div class="grain" aria-hidden="true"></div>
 
 <div class="topbar"><div class="wrap">
@@ -362,6 +433,7 @@ const OFFICIAL = {
   formUrl: "https://www.silver-star.capital/maintenance",  // Maintenance Request Form
   inbox:   "info@silver-star.capital",                     // Monitored inbox (Mon–Fri)
   moveContact: "Chase Wood",                               // Move-in / move-out coordinator
+  pm: { name:"Joe Catino", role:"Property Manager", phone:"(617) 633-8949" }, // first call for emergencies
   gasEmergency: { name:"Piedmont Natural Gas emergency line", phone:"(800) 752-7504" }
 };
 
@@ -586,7 +658,7 @@ const PORTALS = [
    ========================================================================== */
 const LS_KEY="ssc_resident_v1", LS_ID="ssc_resident_identity";
 let AppState = load();
-function load(){ try{ const s=JSON.parse(localStorage.getItem(LS_KEY)); if(s&&Array.isArray(s.reports)) return s; }catch(e){} return { reports:[] }; }
+function load(){ try{ const s=JSON.parse(localStorage.getItem(LS_KEY)); if(s&&Array.isArray(s.reports)){ s.care=s.care||{}; return s; } }catch(e){} return { reports:[], care:{} }; }
 const store = { get(){ return AppState; }, set(n){ AppState=n; try{ localStorage.setItem(LS_KEY, JSON.stringify(n)); }catch(e){} } };
 function persist(){ store.set(AppState); }
 
@@ -725,6 +797,7 @@ function route(){
   else if(base==="requests"){ setTab("#home"); renderRequests(); }
   else if(base==="request"){ setTab("#home"); renderRequestDetail(arg); }
   else { setTab("#home"); renderHome(); }
+  animView(base||"home");
   window.scrollTo(0,0);
 }
 
@@ -774,14 +847,82 @@ function renderWorkbar(){
 /* ============================================================================
    HOME
    ========================================================================== */
-function renderHome(){
-  const reports=store.get().reports.filter(r=>r.location.property===currentProperty);
-  const p=curProp();
-  let html=`<div class="hero"><h1>Hi${firstName()?" "+esc(firstName()):" there"} 👋</h1>
-    <div class="q2">How can we help at ${esc(p.label)}?</div>
-    <div class="small muted sub">Not sure who fixes something? Start with <b>Who fixes this?</b> Anything the owner handles, send us a request.</div></div>
+/* ---- Live, personalized home: time of day, season, interactive care checklist ---- */
+const SEASON={ winter:{label:"Winter",emoji:"❄️"}, spring:{label:"Spring",emoji:"🌱"}, summer:{label:"Summer",emoji:"☀️"}, fall:{label:"Fall",emoji:"🍂"} };
+function season(){ const m=new Date().getMonth(); return (m===11||m<=1)?"winter":m<=4?"spring":m<=7?"summer":"fall"; }
+function greeting(){ const h=new Date().getHours(); return h<12?"Good morning":h<17?"Good afternoon":"Good evening"; }
+function seasonTip(p,s){
+  const t={
+    summer:{emoji:"☀️",text:"Summer's here. Keep your AC breathing: swap the filter and keep vents and the outdoor unit clear."},
+    fall:{emoji:"🍂",text:"Cooler days ahead. Put in a fresh furnace filter and check that windows and doors seal against drafts."},
+    winter:{emoji:"❄️",text:"Cold months. Fresh furnace filter, and let faucets drip on hard-freeze nights to protect the pipes."},
+    spring:{emoji:"🌱",text:"Spring reset. Swap the HVAC filter before AC season and clear out window screens and tracks."}
+  }[s];
+  let text=t.text;
+  if(p.lawnTenant && s==="summer") text+=" And keep the lawn mowed and edged.";
+  return { emoji:t.emoji, kicker:SEASON[s].label+" tip for "+p.label, text };
+}
+function careItems(p,s){
+  const base={
+    summer:[{id:"filter",label:"Replace or check your AC filter"},{id:"vents",label:"Keep vents and the outdoor unit clear"},{id:"detectors",label:"Test smoke and CO detectors"},{id:"drains",label:"Run water through unused drains to clear odors"}],
+    fall:[{id:"filter",label:"Fresh furnace filter before heating season"},{id:"fans",label:"Set ceiling fans clockwise to push warm air down"},{id:"detectors",label:"Test smoke and CO detectors"},{id:"seal",label:"Check windows and doors seal against drafts"}],
+    winter:[{id:"filter",label:"Replace or check your furnace filter"},{id:"drip",label:"Let faucets drip on hard-freeze nights"},{id:"heat",label:"Keep heat at 60°F or above when away"},{id:"detectors",label:"Test smoke and CO detectors"}],
+    spring:[{id:"filter",label:"Fresh HVAC filter before AC season"},{id:"screens",label:"Clean window screens and tracks"},{id:"detectors",label:"Test smoke and CO detectors"},{id:"drainage",label:"Report any clogged gutters or drainage"}]
+  };
+  const items=base[s].slice();
+  if(p.lawnTenant){ const lawn={summer:"Mow and edge; water in the cool of the day",spring:"First mow; clear winter debris",fall:"Rake leaves and take a final mow",winter:"Keep walkways clear after snow"}[s]; items.push({id:"lawn",label:lawn}); }
+  if(p.gas && (s==="winter"||s==="fall")) items.push({id:"gas",label:"Know your gas shut-off and the Piedmont emergency line"});
+  return items;
+}
+function careKey(s){ return (currentProperty||"generic")+":"+s; }
+function careMap(s){ const st=store.get(); st.care=st.care||{}; return (st.care[careKey(s)]=st.care[careKey(s)]||{}); }
+function careHtml(p,s){
+  const items=careItems(p,s), m=careMap(s);
+  const done=items.filter(it=>m[it.id]).length, pct=Math.round(done/items.length*100);
+  return `<div class="sec"><span class="sec-ic">${SEASON[s].emoji}</span><h2>${SEASON[s].label} home care</h2></div>
+    <div class="care">
+      <div class="care-h"><span class="ch-t">A few minutes keeps things running</span><span class="ch-c" id="care-count">${done}/${items.length}</span></div>
+      <div class="bar"><span id="care-bar" style="width:${pct}%"></span></div>
+      <ul>${items.map(it=>`<li class="${m[it.id]?'done':''}" data-care="${it.id}"><span class="box">${m[it.id]?'✓':''}</span><span class="lbl">${esc(it.label)}</span></li>`).join("")}</ul>
+      <div class="alldone" id="care-alldone" style="${done===items.length?'':'display:none'}">All done for the season. Nice work 🎉</div>
+    </div>`;
+}
+function wireCare(p,s){
+  const items=careItems(p,s);
+  document.querySelectorAll("[data-care]").forEach(li=>li.addEventListener("click",()=>{
+    const m=careMap(s), id=li.dataset.care;
+    if(m[id]) delete m[id]; else m[id]=true; persist();
+    const on=!!m[id];
+    li.classList.toggle("done",on); li.querySelector(".box").textContent=on?"✓":"";
+    const done=items.filter(it=>m[it.id]).length, pct=Math.round(done/items.length*100);
+    const bar=$("#care-bar"); if(bar) bar.style.width=pct+"%";
+    const c=$("#care-count"); if(c) c.textContent=done+"/"+items.length;
+    const ad=$("#care-alldone"); if(ad) ad.style.display=done===items.length?"":"none";
+  }));
+}
+/* Re-trigger the view entrance animation after each route render. */
+function animView(base){
+  try{ if(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return; }catch(e){}
+  const listy=["home","responsibility","lease","handbook","emergency","requests"].includes(base);
+  app.classList.remove("viewin","stagger"); void app.offsetWidth; app.classList.add(listy?"stagger":"viewin");
+}
 
-    <div class="actions">
+function renderHome(){
+  const p=curProp(), s=season();
+  const all=store.get().reports.filter(r=>r.location.property===currentProperty);
+  const open=sortReports(all.filter(r=>r.status!=="done"));
+  const tip=seasonTip(p,s);
+  let html=`<div class="hero home-hero"><h1>${esc(greeting())}${firstName()?", "+esc(firstName()):""} 👋</h1>
+    <div class="q2">How can we help at ${esc(p.label)}?</div>
+    <div class="small muted sub">Not sure who fixes something? Start with <b>Who fixes this?</b> Anything the owner handles, send us a request.</div></div>`;
+  if(open.length){
+    const top=open[0];
+    html+=`<div class="livestrip" data-go="#requests"><span class="ls-n">${open.length}</span>
+      <div style="flex:1;min-width:0"><div class="ls-t">Open request${open.length>1?"s":""}</div>
+      <div class="ls-s">Latest: ${esc(top.portalName)} · ${esc(top.status)}</div></div><span class="pulse"></span></div>`;
+  }
+  html+=`<div class="tipcard"><span class="tem">${tip.emoji}</span><div style="min-width:0"><div class="tk">${esc(tip.kicker)}</div><div class="tt">${esc(tip.text)}</div></div></div>`;
+  html+=`<div class="actions">
       <button class="act" data-go="#responsibility" style="--acc:var(--tenant)">
         <span class="aic">✅</span><span class="atitle">Who fixes this?</span>
         <span class="asub">Learn what's yours vs. ours, with DIY tips.</span></button>
@@ -795,20 +936,18 @@ function renderHome(){
         <span class="aic">🚨</span><span class="atitle">Emergency help</span>
         <span class="asub">What to do right now, and who to call.</span></button>
     </div>
-
     <button class="act" data-go="#handbook" style="--acc:var(--shared);width:100%;flex-direction:row;align-items:center;min-height:0;gap:14px;margin-top:12px">
       <span class="aic">📘</span>
       <span style="flex:1"><span class="atitle" style="display:block">Resident handbook</span>
       <span class="asub" style="margin:0">How requests work, entry rules, house rules, insurance.</span></span>
       <span class="prop-go">›</span></button>`;
-
-  html+=`<div class="sec"><h2>Your recent requests</h2><div class="spacer"></div>${reports.length?'<a class="linkbtn" href="#requests">See all</a>':''}</div>`;
-  html += reports.length ? sortReports(reports).slice(0,3).map(reportRow).join("")
+  html+=careHtml(p,s);
+  html+=`<div class="sec"><h2>Your recent requests</h2><div class="spacer"></div>${all.length?'<a class="linkbtn" href="#requests">See all</a>':''}</div>`;
+  html += all.length ? sortReports(all).slice(0,3).map(reportRow).join("")
     : `<div class="empty">No requests yet. Something broken? Tap <b>Report an issue</b>.</div>`;
-
   app.innerHTML=html;
   document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>navigate(b.dataset.go)));
-  wireReportRows();
+  wireCare(p,s); wireReportRows();
 }
 
 /* ============================================================================
@@ -1381,8 +1520,12 @@ function renderEmergency(){
     <div class="small muted sub">For ${esc(p.label)}. An emergency is anything that threatens life, health, or major property damage within hours.</div></div>
 
     <div class="embar"><div class="et">Life-threatening? Call 911 first.</div>
-      <div class="es">Then submit a request and note that it's an emergency.</div>
+      <div class="es">Then call Joe and submit a request noting that it's an emergency.</div>
       <a class="btn block" style="margin-top:10px;background:#fff;color:var(--emergency);border:0" href="tel:911">📞 Call 911</a></div>
+
+    <div class="sec"><h2>Your first call</h2></div>
+    <a class="btn primary block" style="min-height:60px;font-size:17px" href="${telHref(OFFICIAL.pm.phone)}">📞 Call ${esc(OFFICIAL.pm.name)} · ${esc(OFFICIAL.pm.phone)}</a>
+    <div class="small muted" style="margin:9px 2px 0">${esc(OFFICIAL.pm.role)}, and your first call for any urgent issue. If you can't reach Joe, use the approved trade contacts below.</div>
 
     <div class="sec"><h2>What to do right now</h2></div>
     <div class="card"><ul style="margin:0;padding-left:20px;line-height:1.5">
@@ -1404,14 +1547,16 @@ function renderEmergency(){
       <div style="flex:1"><div class="cc-name">${esc(v.name)}</div><div class="cc-trade">${esc(v.trade)} · ${esc(v.phone)}</div></div>
       <a class="btn sm primary" href="${telHref(v.phone)}">📞 Call</a></div></div>`;
   });
-  html+=`<div class="call-card" style="background:var(--sage-tint);border-color:#d8e6dd"><div class="row" style="align-items:center">
+  html+=`<div class="call-card" style="background:var(--forest-tint);border-color:#cfdcd3"><div class="row" style="align-items:center">
       <div style="flex:1"><div class="cc-name">Property manager (monitored inbox)</div><div class="cc-trade">Mon–Fri, business hours</div></div>
       <a class="btn sm" href="mailto:${OFFICIAL.inbox}">✉️ Email</a></div></div>
 
     <div class="card small" style="line-height:1.5;margin-top:6px">Always report the emergency through the app or the <a href="${OFFICIAL.formUrl}" target="_blank" rel="noopener">Maintenance Request Form</a> too, so there's a record and we can approve the work. Vendors can't perform billable work without an approved ticket.</div>`;
   app.innerHTML=html;
   document.body.style.paddingBottom="100px";
-  document.getElementById("actionbar-slot").innerHTML=`<div class="actionbar"><div class="wrap"><button class="btn primary block" id="em-report">🛠️ Submit an emergency request</button></div></div>`;
+  document.getElementById("actionbar-slot").innerHTML=`<div class="actionbar"><div class="wrap">
+    <a class="btn primary block" style="min-height:56px" href="${telHref(OFFICIAL.pm.phone)}">📞 Call Joe · ${esc(OFFICIAL.pm.phone)}</a>
+    <button class="btn" id="em-report" style="flex:0 0 128px">Submit request</button></div></div>`;
   $("#em-report").addEventListener("click",()=>navigate("#welcome"));
 }
 
