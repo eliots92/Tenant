@@ -772,25 +772,52 @@ function persist(){ store.set(AppState); }
    the typed address to a known unit behind the scenes so the experience stays
    tailored (utilities, lease, emergency contacts). Unmatched addresses still get
    in, with general guidance. */
-let RESIDENT = loadIdentity();
-function loadIdentity(){ try{ const s=JSON.parse(localStorage.getItem(LS_ID)); if(s&&s.name&&s.propertyText) return s; }catch(e){} return null; }
-function saveIdentity(r){ RESIDENT=r; try{ localStorage.setItem(LS_ID, JSON.stringify(r)); }catch(e){} }
-/* Match a typed address + unit to a known property id. Uses the leading street
-   number and, for the 1051 duplex, the A/B unit letter to disambiguate. */
-function matchProperty(propText, unitText){
-  const t=(propText||"").toLowerCase();
-  const num=(t.match(/\d{3,4}/)||[])[0];
-  if(!num) return "";
-  let cands=PROPERTIES.filter(p=>p.label.toLowerCase().includes(num));
-  if(!cands.length) return "";
-  if(cands.length===1) return cands[0].id;
-  // Multiple units share the street number (the 1051 duplex) — use the unit letter.
-  const u=((unitText||"")+" "+t).toLowerCase();
-  const wantB=/\bb\b|unit b|apt b|-b\b/.test(u);
-  const wantA=/\ba\b|unit a|apt a|-a\b/.test(u);
-  const byLetter=cands.find(p=>p.label.toLowerCase().endsWith(wantB?"unit b":wantA?"unit a":"~none~"));
-  return (byLetter||cands[0]).id;
+/* Tenant roster (from the Tenants tab). Only people named on the lease for a
+   known unit are admitted to the portal; common first-name variants included. */
+const ROSTER = {
+  "WH-640":["Anthony Lekse","Preston Gottwald","Max Gottwald","Timothy Cooney","Braden Greenslete"],
+  "WH-642":["Ethan Pflug","Hayden Morris","Jacob Blincoe","James Gorday","Alex Gorday","Owen Barker"],
+  "WH-646":["Ashley Best","Lindsey Best","Madeleine Leidner"],
+  "SF-2596":["Heather Max"],
+  "SF-2590":["Daniel Prokop","Dan Prokop"],
+  "SF-2570":["Dave","StaywithDave"],
+  "DV-1051-A":["Rachel Thompson","Maya Gaston"],
+  "DV-1051-B":["Samuel Hartland","Sam Hartland","Jess Hartland"]
+};
+function normName(s){ return String(s||"").toLowerCase().replace(/[^a-z\s]/g," ").replace(/\s+/g," ").trim(); }
+function nameMatches(entered, roster){
+  const e=normName(entered).split(" ").filter(Boolean), r=normName(roster).split(" ").filter(Boolean);
+  if(!e.length||!r.length) return false;
+  if(e.join(" ")===r.join(" ")) return true;
+  if(r.length===1) return e.includes(r[0]);            // single-name roster entry (e.g. "Dave")
+  if(e.length===1) return false;                        // residents must give first and last name
+  const eF=e[0], rF=r[0], eL=e[e.length-1], rL=r[r.length-1];
+  const firstOk = eF===rF || eF.startsWith(rF) || rF.startsWith(eF);  // Dan/Daniel, Sam/Samuel
+  return eL===rL && firstOk;
 }
+/* Validate the typed identity against the roster. Only a resident named on the
+   lease for a recognized unit is admitted. Returns {ok, propId} or {ok:false, reason}. */
+function validateResident(name, propertyText, unit){
+  const num=(String(propertyText).match(/\d{3,4}/)||[])[0];
+  if(!num) return { ok:false, reason:"address" };
+  const cands=PROPERTIES.filter(p=>p.label.toLowerCase().includes(num));
+  if(!cands.length) return { ok:false, reason:"address" };
+  const u=((unit||"")+" "+propertyText).toLowerCase();
+  const pref=/\bb\b|unit b|apt b|-b\b/.test(u)?"unit b":/\ba\b|unit a|apt a|-a\b/.test(u)?"unit a":"";
+  const ordered=cands.slice().sort((a,b)=>(b.label.toLowerCase().endsWith(pref)?1:0)-(a.label.toLowerCase().endsWith(pref)?1:0));
+  for(const p of ordered){
+    if((ROSTER[p.id]||[]).some(n=>nameMatches(name,n))) return { ok:true, propId:p.id };
+  }
+  return { ok:false, reason:"name" };
+}
+let RESIDENT = loadIdentity();
+function loadIdentity(){
+  try{ const s=JSON.parse(localStorage.getItem(LS_ID));
+    if(s&&s.name&&s.propertyText){ const v=validateResident(s.name,s.propertyText,s.unit); if(v.ok){ s.propId=v.propId; return s; } }
+  }catch(e){}
+  return null;
+}
+function saveIdentity(r){ RESIDENT=r; try{ localStorage.setItem(LS_ID, JSON.stringify(r)); }catch(e){} }
 
 /* Fire-and-forget POST to Formspree; never blocks the UI, swallows failures. */
 function formspreeEnabled(ep){ return ep && !/XXXX/.test(ep); }
@@ -882,11 +909,14 @@ function clearBars(){ document.getElementById("actionbar-slot").innerHTML=""; }
 function route(){
   clearBars();
   document.body.style.paddingBottom="88px";
-  // First run: no resident identified yet → the gate is entering your details.
-  if(!RESIDENT && (location.hash!=="#gate")){ location.hash="#gate"; return; }
+  // Gate everything except Emergency: a resident must be identified to proceed,
+  // but Emergency help is always reachable (even before signing in).
+  const hh = location.hash || "#home";
+  const b0 = hh.replace(/^#/,"").split("/")[0];
+  if(!RESIDENT && b0!=="gate" && b0!=="emergency"){ location.hash="#gate"; return; }
   const h = location.hash || "#home";
   const [base, arg] = h.replace(/^#/,"").split("/");
-  const wb=document.querySelector(".workbar"); if(wb) wb.style.display=(base==="gate"||base==="welcome"||base==="funnel")?"none":"";
+  const wb=document.querySelector(".workbar"); if(wb) wb.style.display=(!RESIDENT||base==="gate"||base==="welcome"||base==="funnel")?"none":"";
   renderWorkbar();
 
   if(base==="funnel"){ if(!F || F.portal.id!==arg) startFunnel(arg); else renderFunnel(); setTab("#welcome"); return; }
@@ -922,9 +952,10 @@ function renderGate(){
       <input class="inp" id="g-prop" value="${esc(r.propertyText)}" placeholder="e.g. 640 Hamilton Ave" autocomplete="street-address">
       <label class="field">Unit / bedroom <span class="muted">(if applicable)</span></label>
       <input class="inp" id="g-unit" value="${esc(r.unit)}" placeholder="e.g. Bedroom 2, Unit A">
-      <div id="g-err" class="small" style="color:var(--emergency);height:18px;margin:8px 0 0"></div>
+      <div id="g-err" class="small" style="color:var(--emergency);min-height:18px;margin:8px 0 0;line-height:1.4"></div>
     </div>
-    <div class="small muted" style="margin:2px 2px 0">Your details are stored only on this device.</div>`;
+    <div class="small muted" style="margin:2px 2px 0">Your details are stored only on this device. Access is limited to residents named on the lease.</div>
+    <div style="text-align:center;margin-top:18px"><a class="linkbtn" href="#emergency" style="color:var(--emergency)">🚨 In an emergency? Get help now →</a></div>`;
   app.innerHTML=html;
   document.body.style.paddingBottom="100px";
   document.getElementById("actionbar-slot").innerHTML=`<div class="actionbar"><div class="wrap">
@@ -935,9 +966,15 @@ function renderGate(){
     const unit=($("#g-unit").value||"").trim();
     if(!name){ $("#g-err").textContent="Please enter your name."; return; }
     if(!propertyText){ $("#g-err").textContent="Please enter your property address."; return; }
-    const propId=matchProperty(propertyText, unit);
-    saveIdentity({ name, propertyText, unit, propId });
-    currentProperty=propId||"";
+    const v=validateResident(name, propertyText, unit);
+    if(!v.ok){
+      $("#g-err").innerHTML = v.reason==="address"
+        ? "We couldn't find that address on file. Check the spelling, or contact us at info@silver-star.capital."
+        : "We couldn't match your name to the lease for that address. If you just moved in or think this is a mistake, contact us at info@silver-star.capital.";
+      return;
+    }
+    saveIdentity({ name, propertyText, unit, propId:v.propId });
+    currentProperty=v.propId;
     navigate("#home");
   };
   $("#g-go").addEventListener("click",submit);
