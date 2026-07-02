@@ -488,17 +488,20 @@ const FORMSPREE_REQUESTS = "https://formspree.io/f/XXXXXXXX";
    API and grounded in this resident's own lease, utilities, and the handbook's
    responsibility guide. It is additive only - the report flow never depends on
    it (residents hate AI gates in front of maintenance requests).
-   Configure ONE of:
-   - proxyUrl: a small server-side proxy that holds your API key and forwards
-     to https://api.anthropic.com/v1/messages (recommended for production).
-   - apiKey: an Anthropic API key, called directly from the browser. NOTE: the
-     key ships in this page's source, so anyone who can open the portal can
-     read it. Acceptable for a private pilot only.
-   Leave both empty and the Ask screen shows a friendly not-yet-enabled note. */
+   The key lives on the server, never in this page: when the portal is
+   deployed on Vercel, /api/ask (see api/ask.js) forwards requests to
+   Anthropic using the ANTHROPIC_API_KEY environment variable that the
+   Vercel Anthropic integration provisions on the project. Nothing to
+   paste here.
+   - proxyUrl: the proxy endpoint. The default "/api/ask" works on the
+     Vercel deployment; point it at an absolute URL to use the deployed
+     function from elsewhere (e.g. "https://your-app.vercel.app/api/ask").
+   - apiKey: direct-from-browser fallback for a keyless local pilot only -
+     the key would ship in page source. Leave empty when using the proxy. */
 const ASSISTANT = {
-  apiKey: "",        // sk-ant-...  (direct browser access; pilot only)
-  proxyUrl: "",      // e.g. "https://portal-ai.your-domain.workers.dev"
-  model: "claude-opus-4-8"
+  apiKey: "",
+  proxyUrl: "/api/ask",
+  model: "claude-opus-4-8"   // informational; the server pins the model
 };
 function assistantEnabled(){ return !!(ASSISTANT.apiKey || ASSISTANT.proxyUrl); }
 
