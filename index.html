@@ -443,6 +443,11 @@ html{background:var(--paper)} body{background:transparent}
   .gate-hero h1 .w,.g-in{animation:none!important;opacity:1!important}
   .rot span{animation:none}.rot span:nth-child(n+2){display:none}.rot span:first-child{opacity:1}
 }
+
+/* Continue with Google */
+.gdiv{display:flex;align-items:center;gap:12px;margin:16px 0 0;color:var(--muted);font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:700}
+.gdiv::before,.gdiv::after{content:"";flex:1;height:1px;background:var(--line)}
+.g35{animation-delay:.58s}
 </style>
 </head>
 <body>
@@ -524,6 +529,72 @@ const ASSISTANT = {
   model: "claude-opus-4-8"   // informational; the server pins the model
 };
 function assistantEnabled(){ return !!(ASSISTANT.apiKey || ASSISTANT.proxyUrl); }
+
+/* "Continue with Google" (optional). One tap identifies the resident by their
+   VERIFIED Google email - matched against the lease roster - so there's
+   nothing to type and no name-spelling guesswork. To enable: create an OAuth
+   Client ID in Google Cloud Console (APIs & Services -> Credentials -> Create
+   credentials -> OAuth client ID -> Web application), add your portal's URL
+   (e.g. https://your-app.vercel.app) under Authorized JavaScript origins, and
+   paste the client ID below. The client ID is public by design - safe to ship.
+   PRIVACY: resident emails are NOT embedded in this page. GEMAILS holds
+   SHA-256 hashes of the roster emails; the email Google returns is hashed
+   in-browser and matched. The manual form remains the fallback. */
+const GOOGLE = { clientId: "" };
+const GEMAILS={
+  "a412c11d9ca6b67c5d88b0071c8b604f9a876c697aff4ea9afa1c1b8833b7f9d":{p:"WH-640",u:"Bedroom 1"},
+  "31672d808d53854468448c82fc47a518391800d01f9221b080f28f3e6455865f":{p:"WH-640",u:"Bedroom 2"},
+  "6fdf6d4007cca0e6a27f510a28bcc136298eb9749d1e25d079add8e16d1b7300":{p:"WH-640",u:"Bedroom 3"},
+  "71adb42c6a71a370279babf0298616bd7c34551d323e93d5725635272b377ebd":{p:"WH-640",u:"Bedroom 4"},
+  "2866f929a65f62d58c3ff3b754af95876f57c536809a2bb4b7ee904ec67cbc22":{p:"WH-640",u:"Bedroom 5"},
+  "52d1741b722ea4dab4ac46b86486ccbc62532eeecf35c9f1ac2a04be557a1a9a":{p:"WH-642",u:"Bedroom 1"},
+  "fbe8e2384789756357e09034d2d1f5fa5eefe7a7815de8ea3f3b97d8ceebe5de":{p:"WH-642",u:"Bedroom 2"},
+  "e88ae51e663b0a3fa56348d6b04e69572cf3966ad16af12b43c8a784af52f25d":{p:"WH-642",u:"Bedroom 3"},
+  "0641b866fcd1100afec9e135c69f0fd280b2c46f803c104c9890efa16d78830a":{p:"WH-642",u:"Bedroom 4"},
+  "5fed8b7baa31114ccb549e5df1a1b2c1d681d53148028d09ee71311876c7cbd5":{p:"WH-642",u:"Bedroom 5"},
+  "ea537783a2f62d70a3c22177715d004175604f5e10efd573e601518b68b681c0":{p:"WH-646",u:"Bedroom 1"},
+  "ff7487c1d1f3020ec23b2f17f7b456370dd843c0cfd09dcfc2587ca1dc786b9b":{p:"WH-646",u:"Bedroom 2"},
+  "417b9da2f3402d95b99cf3d7d23d30cc32599ef6117fa90a545bf88a1d179a96":{p:"WH-646",u:"Bedroom 3"},
+  "7d71753d73239fecf3d7cf46265eefd10db819672ee2c848416d660d70461e64":{p:"SF-2596"},
+  "d561459bc1852a22152091adaedac5031817c7329f709aff085d86537e86d131":{p:"SF-2590"},
+  "c35e13265fddaffa91a93fe50a52ca1431b4432c1d894031295f4749e0585f8e":{p:"SF-2570"},
+  "817feb6757e2112e441c31350e7b591dca8ef4c5f300302af46695368f8baa4f":{p:"DV-1051-A",u:"Unit A"},
+  "c620bf115c0afcdf77069d5af65af9a9939eb4a3d5f2cf9ed633df7b5a046712":{p:"DV-1051-A",u:"Unit A"},
+  "dd3388e91d6428158f2086aa43bc73d67809dcc5bf7390436c2345ae47cd62e2":{p:"DV-1051-B",u:"Unit B"}
+};
+let gsiLoading=null;
+function loadGSI(){
+  if(window.google&&window.google.accounts) return Promise.resolve();
+  if(gsiLoading) return gsiLoading;
+  gsiLoading=new Promise((res,rej)=>{
+    const s=document.createElement("script");
+    s.src="https://accounts.google.com/gsi/client"; s.async=true;
+    s.onload=res; s.onerror=()=>{ gsiLoading=null; rej(); };
+    document.head.appendChild(s);
+    setTimeout(()=>{ if(!(window.google&&window.google.accounts)){ gsiLoading=null; rej(); } },6000);
+  });
+  return gsiLoading;
+}
+async function sha256Hex(str){
+  const buf=await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+async function onGoogleCredential(resp){
+  const err=m=>{ const el=$("#g-err"); if(el) el.textContent=m; };
+  try{
+    const payload=JSON.parse(atob(resp.credential.split(".")[1].replace(/-/g,"+").replace(/_/g,"/")));
+    if(payload.aud!==GOOGLE.clientId){ err("Google sign-in didn't complete. Please use the form below."); return; }
+    const email=String(payload.email||"").toLowerCase().trim();
+    if(!email||payload.email_verified===false){ err("We couldn't verify that Google account. Please use the form below."); return; }
+    const hex=await sha256Hex(email);
+    const hit=GEMAILS[hex];
+    if(!hit){ err("That Google account isn't on a lease we manage. Use the form below, or contact info@silver-star.capital."); return; }
+    const p=propById(hit.p);
+    saveIdentity({ name: payload.name||"Resident", propertyText: p?p.label:"", unit: hit.u||"", propId: hit.p, g: hex });
+    currentProperty=hit.p;
+    navigate("#home");
+  }catch(e){ err("Google sign-in didn't complete. Please use the form below."); }
+}
 
 /* System prompt built from THIS resident's data - the differentiator over
    generic portal chatbots is that it knows their lease, not boilerplate. */
@@ -836,7 +907,12 @@ function validateResident(name, propertyText, unit){
 let RESIDENT = loadIdentity();
 function loadIdentity(){
   try{ const s=JSON.parse(localStorage.getItem(LS_ID));
-    if(s&&s.name&&s.propertyText){ const v=validateResident(s.name,s.propertyText,s.unit); if(v.ok){ s.propId=v.propId; return s; } }
+    if(s&&s.name&&s.propertyText){
+      // Google-verified identity: re-check the stored email hash against the
+      // roster instead of the name (Google display names needn't match leases).
+      if(s.g && GEMAILS[s.g] && GEMAILS[s.g].p===s.propId) return s;
+      const v=validateResident(s.name,s.propertyText,s.unit); if(v.ok){ s.propId=v.propId; return s; }
+    }
   }catch(e){}
   return null;
 }
@@ -975,6 +1051,10 @@ function renderGate(){
       <div class="q2 g-in g2">Let's get you set up</div>
       <div class="small muted sub g-in g3">Inside your portal:&nbsp;<span class="rot"><span>who fixes what, with DIY tips</span><span>instant answers, day or night</span><span>one-tap emergency help</span></span></div>
     </div>
+    ${GOOGLE.clientId?`<div class="g-in g35" id="gwrap" style="margin-top:18px">
+      <div id="gbtn" style="display:flex;justify-content:center;min-height:44px"></div>
+      <div class="gdiv"><span>or enter your details</span></div>
+    </div>`:""}
     <form id="g-form" autocomplete="on" class="card gate-card g-in g4" style="margin-top:16px">
       <label class="field" style="margin-top:0" for="g-name">Your name</label>
       <input class="inp" id="g-name" name="name" value="${esc(r.name)}" placeholder="First and last name" autocomplete="name" autocapitalize="words" enterkeyhint="next">
@@ -1011,6 +1091,13 @@ function renderGate(){
   // action-bar button bound via form=). No separate click handler - that
   // would double-fire.
   document.getElementById("g-form").addEventListener("submit",e=>{ e.preventDefault(); submit(); });
+  if(GOOGLE.clientId){
+    loadGSI().then(()=>{
+      google.accounts.id.initialize({ client_id: GOOGLE.clientId, callback: onGoogleCredential });
+      const el=document.getElementById("gbtn");
+      if(el) google.accounts.id.renderButton(el,{ theme:"outline", size:"large", shape:"pill", text:"continue_with", width:280 });
+    }).catch(()=>{ const w=document.getElementById("gwrap"); if(w) w.style.display="none"; });
+  }
 }
 /* Static "your home" bar — no browsing other properties. */
 function renderWorkbar(){
