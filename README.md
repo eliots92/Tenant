@@ -37,6 +37,13 @@ All editable config is at the top of the `<script>` in `index.html`:
 - `FORMSPREE_REQUESTS` — paste your Formspree endpoint to receive emailed
   requests. Left as an `XXXX` placeholder, nothing is sent; the app still works
   fully on-device and shows the official Maintenance Request Form link.
+- `ASSISTANT` — the "Ask us anything" concierge. On Vercel it works out of the
+  box: the portal calls `/api/ask` (see `api/ask.js`), a serverless function
+  that forwards to the Anthropic API using the project's `ANTHROPIC_API_KEY`
+  environment variable (provisioned by the Vercel Anthropic integration). The
+  key never appears in the page. The function pins the model and caps
+  max_tokens, turn count, and body size so the public endpoint can't be used
+  to run up spend.
 - `OFFICIAL` — the maintenance form URL, monitored inbox, and gas-emergency line.
 - `PROPERTIES` — the residential units, each with utilities, lease terms, owner,
   and emergency service area.

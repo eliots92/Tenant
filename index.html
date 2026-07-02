@@ -401,6 +401,28 @@ html{background:var(--paper)} body{background:transparent}
   #app.viewin,#app.stagger>*{animation:none!important;opacity:1!important;transform:none!important}
   .livestrip .pulse{animation:none}
 }
+
+/* ============================================================================
+   ASK — resident concierge chat (Claude), and the live request tracker.
+   ========================================================================== */
+.chat{display:flex;flex-direction:column;gap:10px;padding:6px 0 8px}
+.bub{max-width:86%;padding:12px 15px;border-radius:16px;line-height:1.5;font-size:15px;box-shadow:var(--shadow);white-space:pre-wrap;overflow-wrap:break-word}
+.bub.me{align-self:flex-end;background:var(--ink);color:var(--paper);border-bottom-right-radius:5px}
+.bub.ai{align-self:flex-start;background:var(--surface-hi);border:1px solid var(--line);border-bottom-left-radius:5px}
+.bub.err{border-color:color-mix(in srgb,var(--emergency) 35%,var(--line))}
+.bub .act-link{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:9px 14px;border-radius:10px;background:var(--accent);color:#fff;font-weight:600;font-size:13px;text-decoration:none}
+.bub.typing{display:flex;gap:5px;padding:15px 17px}
+.bub.typing i{width:7px;height:7px;border-radius:50%;background:var(--muted-2);animation:tdot 1.1s ease-in-out infinite}
+.bub.typing i:nth-child(2){animation-delay:.15s}.bub.typing i:nth-child(3){animation-delay:.3s}
+@keyframes tdot{0%,60%,100%{transform:translateY(0);opacity:.5}30%{transform:translateY(-4px);opacity:1}}
+.chips{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}
+.chipq{border:1px solid var(--line-2);background:var(--surface-hi);border-radius:999px;padding:10px 15px;font-size:13.5px;font-weight:500;cursor:pointer;color:var(--ink);box-shadow:var(--shadow);text-align:left}
+.chipq:active{transform:scale(.98)}
+/* Live request tracker states */
+.steps li.done::before{content:"\2713";background:var(--forest);border-color:var(--forest);color:#fff}
+.steps li.now::before{border-color:var(--accent);color:var(--accent-d);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 16%,transparent)}
+.steps li.todo{opacity:.55}
+@media (prefers-reduced-motion:reduce){.bub.typing i{animation:none}}
 </style>
 </head>
 <body>
@@ -461,6 +483,74 @@ const OFFICIAL = {
    is sent — the app still works fully: it saves locally and shows the official
    Maintenance Request Form link so residents always have a way through. */
 const FORMSPREE_REQUESTS = "https://formspree.io/f/XXXXXXXX";
+
+/* Claude concierge (optional). "Ask us anything" is powered by the Anthropic
+   API and grounded in this resident's own lease, utilities, and the handbook's
+   responsibility guide. It is additive only - the report flow never depends on
+   it (residents hate AI gates in front of maintenance requests).
+   The key lives on the server, never in this page: when the portal is
+   deployed on Vercel, /api/ask (see api/ask.js) forwards requests to
+   Anthropic using the ANTHROPIC_API_KEY environment variable that the
+   Vercel Anthropic integration provisions on the project. Nothing to
+   paste here.
+   - proxyUrl: the proxy endpoint. The default "/api/ask" works on the
+     Vercel deployment; point it at an absolute URL to use the deployed
+     function from elsewhere (e.g. "https://your-app.vercel.app/api/ask").
+   - apiKey: direct-from-browser fallback for a keyless local pilot only -
+     the key would ship in page source. Leave empty when using the proxy. */
+const ASSISTANT = {
+  apiKey: "",
+  proxyUrl: "/api/ask",
+  model: "claude-opus-4-8"   // informational; the server pins the model
+};
+function assistantEnabled(){ return !!(ASSISTANT.apiKey || ASSISTANT.proxyUrl); }
+
+/* System prompt built from THIS resident's data - the differentiator over
+   generic portal chatbots is that it knows their lease, not boilerplate. */
+function assistantSystem(){
+  const p=curProp(), L=p.lease;
+  const resp=RESP.map(item=>{const v=respVerdict(item);
+    return "- "+item.name+": "+(v==="tenant"?"RESIDENT handles":v==="landlord"?"OWNER handles (report it)":"SHARED")+" | Resident: "+item.tenant+" | Owner: "+item.landlord;}).join("\n");
+  const utils=p.tenantPays.map(u=>"- "+u[0]+(u[1]?" (provider: "+u[1]+")":"")).join("\n")||"- Per lease";
+  return "You are the resident concierge for Silver Star Capital, a property management company in Tennessee. You are speaking with "+(RESIDENT?RESIDENT.name:"a resident")+" who lives at "+p.label+(unitLabel()?", "+unitLabel():"")+" ("+(p.type||"residential")+").\n\n"
+  +"Your job: answer questions about their home, lease, and maintenance responsibilities using ONLY the facts below. Be warm, brief (2-5 sentences), and concrete. Plain text only - no markdown headings or bullet lists unless asked.\n\n"
+  +"FACTS - who fixes what (from the handbook; the signed lease always controls):\n"+resp+"\n\n"
+  +"FACTS - this home's lease: late fee "+L.lateFee+"; grace period "+L.grace+"; NSF fee "+L.nsf+"; deposit "+L.deposit+"; insurance: "+L.insurance+"; pets: "+L.pets+"."+((L.extra&&L.extra.length)?" Notes: "+L.extra.join("; ")+".":"")+"\n"
+  +"FACTS - utilities the resident sets up and pays:\n"+utils+"\n"
+  +(p.landlordCovers.length?"FACTS - owner covers: "+p.landlordCovers.join(", ")+".\n":"")
+  +"FACTS - response windows: Emergency same day 24/7; Urgent within 24 hours; Standard within 5 business days; Project scheduled.\n"
+  +"FACTS - official channels: Maintenance Request Form "+OFFICIAL.formUrl+"; monitored inbox "+OFFICIAL.inbox+"; property manager "+OFFICIAL.pm.name+" "+OFFICIAL.pm.phone+" (the first call for urgent issues).\n\n"
+  +"RULES:\n"
+  +"- SAFETY FIRST: for any active hazard (gas smell, sparking, flooding, fire, sewage) tell them to get safe, call 911 if life-threatening, then call "+OFFICIAL.pm.name+" at "+OFFICIAL.pm.phone+". Never give DIY steps for gas, electrical panels, or structural issues.\n"
+  +"- If a repair is the owner's responsibility, tell them to submit a request in this app.\n"
+  +"- If the answer is not in the facts, say you are not sure and point them to "+OFFICIAL.inbox+". Never invent lease terms, fees, or dates.\n"
+  +"- Anything legal (eviction, disputes, lease interpretation beyond these facts): refer to the inbox.\n"
+  +"- End your reply with exactly one action tag on its own final line when a next step in the app helps, chosen from: [ACTION:report] [ACTION:emergency] [ACTION:lease] [ACTION:whofixes]. Omit it when none fits.";
+}
+
+let CHAT=[];     // API-shaped turns {role, content}
+let CHATLOG=[];  // display turns {who:"me"|"ai", text, action, err}
+async function askClaude(){
+  const headers={ "content-type":"application/json", "anthropic-version":"2023-06-01" };
+  let url;
+  if(ASSISTANT.proxyUrl){ url=ASSISTANT.proxyUrl; }
+  else { url="https://api.anthropic.com/v1/messages";
+    headers["x-api-key"]=ASSISTANT.apiKey;
+    headers["anthropic-dangerous-direct-browser-access"]="true"; }
+  const res=await fetch(url,{ method:"POST", headers, body:JSON.stringify({
+    model:ASSISTANT.model, max_tokens:1024,
+    thinking:{type:"adaptive"},
+    system:assistantSystem(), messages:CHAT }) });
+  if(!res.ok) throw new Error("HTTP "+res.status);
+  const data=await res.json();
+  if(data.stop_reason==="refusal"){
+    return { text:"I can't help with that one - please email "+OFFICIAL.inbox+" and a human will take care of you.", action:null, raw:null };
+  }
+  const raw=(data.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("\n").trim();
+  let action=null;
+  const text=raw.replace(/\[ACTION:(report|emergency|lease|whofixes)\]/g,(m,a)=>{ action=a; return ""; }).trim();
+  return { text, action, raw };
+}
 
 /* Residential units (from the Properties/Leases/Utilities/Tenants tabs).
    area = emergency-vendor service area ("weho" = Nashville / Wedgewood-Houston,
@@ -685,25 +775,52 @@ function persist(){ store.set(AppState); }
    the typed address to a known unit behind the scenes so the experience stays
    tailored (utilities, lease, emergency contacts). Unmatched addresses still get
    in, with general guidance. */
-let RESIDENT = loadIdentity();
-function loadIdentity(){ try{ const s=JSON.parse(localStorage.getItem(LS_ID)); if(s&&s.name&&s.propertyText) return s; }catch(e){} return null; }
-function saveIdentity(r){ RESIDENT=r; try{ localStorage.setItem(LS_ID, JSON.stringify(r)); }catch(e){} }
-/* Match a typed address + unit to a known property id. Uses the leading street
-   number and, for the 1051 duplex, the A/B unit letter to disambiguate. */
-function matchProperty(propText, unitText){
-  const t=(propText||"").toLowerCase();
-  const num=(t.match(/\d{3,4}/)||[])[0];
-  if(!num) return "";
-  let cands=PROPERTIES.filter(p=>p.label.toLowerCase().includes(num));
-  if(!cands.length) return "";
-  if(cands.length===1) return cands[0].id;
-  // Multiple units share the street number (the 1051 duplex) — use the unit letter.
-  const u=((unitText||"")+" "+t).toLowerCase();
-  const wantB=/\bb\b|unit b|apt b|-b\b/.test(u);
-  const wantA=/\ba\b|unit a|apt a|-a\b/.test(u);
-  const byLetter=cands.find(p=>p.label.toLowerCase().endsWith(wantB?"unit b":wantA?"unit a":"~none~"));
-  return (byLetter||cands[0]).id;
+/* Tenant roster (from the Tenants tab). Only people named on the lease for a
+   known unit are admitted to the portal; common first-name variants included. */
+const ROSTER = {
+  "WH-640":["Anthony Lekse","Preston Gottwald","Max Gottwald","Timothy Cooney","Braden Greenslete"],
+  "WH-642":["Ethan Pflug","Hayden Morris","Jacob Blincoe","James Gorday","Alex Gorday","Owen Barker"],
+  "WH-646":["Ashley Best","Lindsey Best","Madeleine Leidner"],
+  "SF-2596":["Heather Max"],
+  "SF-2590":["Daniel Prokop","Dan Prokop"],
+  "SF-2570":["Dave","StaywithDave"],
+  "DV-1051-A":["Rachel Thompson","Maya Gaston"],
+  "DV-1051-B":["Samuel Hartland","Sam Hartland","Jess Hartland"]
+};
+function normName(s){ return String(s||"").toLowerCase().replace(/[^a-z\s]/g," ").replace(/\s+/g," ").trim(); }
+function nameMatches(entered, roster){
+  const e=normName(entered).split(" ").filter(Boolean), r=normName(roster).split(" ").filter(Boolean);
+  if(!e.length||!r.length) return false;
+  if(e.join(" ")===r.join(" ")) return true;
+  if(r.length===1) return e.includes(r[0]);            // single-name roster entry (e.g. "Dave")
+  if(e.length===1) return false;                        // residents must give first and last name
+  const eF=e[0], rF=r[0], eL=e[e.length-1], rL=r[r.length-1];
+  const firstOk = eF===rF || eF.startsWith(rF) || rF.startsWith(eF);  // Dan/Daniel, Sam/Samuel
+  return eL===rL && firstOk;
 }
+/* Validate the typed identity against the roster. Only a resident named on the
+   lease for a recognized unit is admitted. Returns {ok, propId} or {ok:false, reason}. */
+function validateResident(name, propertyText, unit){
+  const num=(String(propertyText).match(/\d{3,4}/)||[])[0];
+  if(!num) return { ok:false, reason:"address" };
+  const cands=PROPERTIES.filter(p=>p.label.toLowerCase().includes(num));
+  if(!cands.length) return { ok:false, reason:"address" };
+  const u=((unit||"")+" "+propertyText).toLowerCase();
+  const pref=/\bb\b|unit b|apt b|-b\b/.test(u)?"unit b":/\ba\b|unit a|apt a|-a\b/.test(u)?"unit a":"";
+  const ordered=cands.slice().sort((a,b)=>(b.label.toLowerCase().endsWith(pref)?1:0)-(a.label.toLowerCase().endsWith(pref)?1:0));
+  for(const p of ordered){
+    if((ROSTER[p.id]||[]).some(n=>nameMatches(name,n))) return { ok:true, propId:p.id };
+  }
+  return { ok:false, reason:"name" };
+}
+let RESIDENT = loadIdentity();
+function loadIdentity(){
+  try{ const s=JSON.parse(localStorage.getItem(LS_ID));
+    if(s&&s.name&&s.propertyText){ const v=validateResident(s.name,s.propertyText,s.unit); if(v.ok){ s.propId=v.propId; return s; } }
+  }catch(e){}
+  return null;
+}
+function saveIdentity(r){ RESIDENT=r; try{ localStorage.setItem(LS_ID, JSON.stringify(r)); }catch(e){} }
 
 /* Fire-and-forget POST to Formspree; never blocks the UI, swallows failures. */
 function formspreeEnabled(ep){ return ep && !/XXXX/.test(ep); }
@@ -795,11 +912,14 @@ function clearBars(){ document.getElementById("actionbar-slot").innerHTML=""; }
 function route(){
   clearBars();
   document.body.style.paddingBottom="88px";
-  // First run: no resident identified yet → the gate is entering your details.
-  if(!RESIDENT && (location.hash!=="#gate")){ location.hash="#gate"; return; }
+  // Gate everything except Emergency: a resident must be identified to proceed,
+  // but Emergency help is always reachable (even before signing in).
+  const hh = location.hash || "#home";
+  const b0 = hh.replace(/^#/,"").split("/")[0];
+  if(!RESIDENT && b0!=="gate" && b0!=="emergency"){ location.hash="#gate"; return; }
   const h = location.hash || "#home";
   const [base, arg] = h.replace(/^#/,"").split("/");
-  const wb=document.querySelector(".workbar"); if(wb) wb.style.display=(base==="gate"||base==="welcome"||base==="funnel")?"none":"";
+  const wb=document.querySelector(".workbar"); if(wb) wb.style.display=(!RESIDENT||base==="gate"||base==="welcome"||base==="funnel")?"none":"";
   renderWorkbar();
 
   if(base==="funnel"){ if(!F || F.portal.id!==arg) startFunnel(arg); else renderFunnel(); setTab("#welcome"); return; }
@@ -809,6 +929,7 @@ function route(){
   else if(base==="welcome"){ setTab("#welcome"); renderWelcome(); }
   else if(base==="responsibility"){ setTab("#responsibility"); renderResponsibility(); }
   else if(base==="resp"){ setTab("#responsibility"); renderRespDetail(arg); }
+  else if(base==="ask"){ setTab("#home"); renderAsk(); }
   else if(base==="lease"){ setTab("#lease"); renderLease(); }
   else if(base==="emergency"){ setTab("#home"); renderEmergency(); }
   else if(base==="handbook"){ setTab("#home"); renderHandbook(); }
@@ -834,9 +955,10 @@ function renderGate(){
       <input class="inp" id="g-prop" value="${esc(r.propertyText)}" placeholder="e.g. 640 Hamilton Ave" autocomplete="street-address">
       <label class="field">Unit / bedroom <span class="muted">(if applicable)</span></label>
       <input class="inp" id="g-unit" value="${esc(r.unit)}" placeholder="e.g. Bedroom 2, Unit A">
-      <div id="g-err" class="small" style="color:var(--emergency);height:18px;margin:8px 0 0"></div>
+      <div id="g-err" class="small" style="color:var(--emergency);min-height:18px;margin:8px 0 0;line-height:1.4"></div>
     </div>
-    <div class="small muted" style="margin:2px 2px 0">Your details are stored only on this device.</div>`;
+    <div class="small muted" style="margin:2px 2px 0">Your details are stored only on this device. Access is limited to residents named on the lease.</div>
+    <div style="text-align:center;margin-top:18px"><a class="linkbtn" href="#emergency" style="color:var(--emergency)">🚨 In an emergency? Get help now →</a></div>`;
   app.innerHTML=html;
   document.body.style.paddingBottom="100px";
   document.getElementById("actionbar-slot").innerHTML=`<div class="actionbar"><div class="wrap">
@@ -847,9 +969,15 @@ function renderGate(){
     const unit=($("#g-unit").value||"").trim();
     if(!name){ $("#g-err").textContent="Please enter your name."; return; }
     if(!propertyText){ $("#g-err").textContent="Please enter your property address."; return; }
-    const propId=matchProperty(propertyText, unit);
-    saveIdentity({ name, propertyText, unit, propId });
-    currentProperty=propId||"";
+    const v=validateResident(name, propertyText, unit);
+    if(!v.ok){
+      $("#g-err").innerHTML = v.reason==="address"
+        ? "We couldn't find that address on file. Check the spelling, or contact us at info@silver-star.capital."
+        : "We couldn't match your name to the lease for that address. If you just moved in or think this is a mistake, contact us at info@silver-star.capital.";
+      return;
+    }
+    saveIdentity({ name, propertyText, unit, propId:v.propId });
+    currentProperty=v.propId;
     navigate("#home");
   };
   $("#g-go").addEventListener("click",submit);
@@ -959,6 +1087,11 @@ function renderHome(){
       <span style="flex:1"><span class="atitle" style="display:block">Resident handbook</span>
       <span class="asub" style="margin:0">How requests work, entry rules, house rules, insurance.</span></span>
       <span class="prop-go">›</span></button>`;
+  html+=`<button class="act" data-go="#ask" style="--acc:var(--accent);width:100%;flex-direction:row;align-items:center;min-height:0;gap:14px;margin-top:12px">
+      <span class="aic">\u{1F4AC}</span>
+      <span style="flex:1"><span class="atitle" style="display:block">Ask us anything</span>
+      <span class="asub" style="margin:0">Instant answers about your home and lease, day or night.</span></span>
+      <span class="prop-go">\u203A</span></button>`;
   html+=careHtml(p,s);
   html+=`<div class="sec"><h2>Your recent requests</h2><div class="spacer"></div>${all.length?'<a class="linkbtn" href="#requests">See all</a>':''}</div>`;
   html += all.length ? sortReports(all).slice(0,3).map(reportRow).join("")
@@ -1422,6 +1555,18 @@ function celebrate(done){
 /* ============================================================================
    REQUESTS (resident's own saved requests)
    ========================================================================== */
+/* Concrete "hear back by" deadline from the handbook's response windows -
+   the fix for the #1 portal complaint: requests vanishing into a black hole. */
+function expectedBy(r){
+  const created=new Date(r.createdAt);
+  if(r.urgency==="emergency") return { label:"today" };
+  if(r.urgency==="urgent"){ const d=new Date(created); d.setHours(d.getHours()+24);
+    return { label:d.toLocaleString(undefined,{weekday:"short",month:"short",day:"numeric",hour:"numeric"}) }; }
+  if(r.urgency==="soon"){ let d=new Date(created), n=0;
+    while(n<5){ d.setDate(d.getDate()+1); const w=d.getDay(); if(w!==0&&w!==6) n++; }
+    return { label:d.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"}) }; }
+  return null;
+}
 function sortReports(list){ return list.slice().sort((a,b)=> a.urgency!==b.urgency ? URG[b.urgency]-URG[a.urgency] : new Date(b.createdAt)-new Date(a.createdAt)); }
 function reportRow(r){
   const g=groupById(r.category), t=TIERS[r.urgency]||TIERS.routine;
@@ -1460,8 +1605,15 @@ function renderRequestDetail(id){
       <div class="es">If it's a life-safety issue, call 911 first. Then open Emergency help for who to call now.</div>
       <a class="btn block" style="margin-top:10px;background:#fff;color:var(--emergency);border:0" href="#emergency">Open Emergency help →</a></div>`;
   }
-  html+=`<div class="sec"><h2>What happens next</h2></div><div class="card"><ol class="steps">`+
-    WORKFLOW.map(([st,sd])=>`<li><div class="st">${esc(st)}</div><div class="sd">${esc(sd)}</div></li>`).join("")+`</ol></div>`;
+  // Live tracker: step 1 (Submit) is done the moment the request exists; the
+  // acknowledge step is in progress. A concrete hear-back-by deadline sets
+  // expectations - the fix for requests feeling like a black hole.
+  const cur=1, eb=expectedBy(r);
+  html+=`<div class="sec"><h2>Where your request is</h2></div><div class="card">`+
+    (eb?`<div class="small" style="margin-bottom:12px">Expect to hear from us by <b>${esc(eb.label)}</b>.</div>`
+       :`<div class="small" style="margin-bottom:12px">This is scheduled work - we'll reach out to plan a time.</div>`)+
+    `<ol class="steps">`+
+    WORKFLOW.map(([st,sd],i)=>`<li class="${i<cur?'done':i===cur?'now':'todo'}"><div class="st">${esc(st)}${i<cur?' - done':i===cur?' - in progress':''}</div><div class="sd">${esc(sd)}</div></li>`).join("")+`</ol></div>`;
 
   html+=`<div class="sec"><h2>What you told us</h2></div><div class="card">`;
   r.answers.forEach(qa=>html+=`<div class="kv"><span class="k">${esc(qa.q)}</span><span class="v">${esc(qa.a)}</span></div>`);
@@ -1478,6 +1630,72 @@ function renderRequestDetail(id){
   document.querySelectorAll("[data-full]").forEach(img=>img.addEventListener("click",()=>showImage(img.dataset.full)));
 }
 function showImage(src){ const slot=document.getElementById("modal-slot"); slot.innerHTML=`<div class="overlay" id="imgov"><img src="${src}"></div>`; $("#imgov").addEventListener("click",()=>slot.innerHTML=""); }
+
+/* ============================================================================
+   ASK US ANYTHING - resident concierge (Claude)
+   ========================================================================== */
+const STARTERS=["Who fixes a clogged drain?","When is rent considered late?","Do I need renter's insurance?","What do I do if the AC stops working?"];
+let ASK_PENDING=false;
+function bubbleHtml(m){
+  const actMap={report:["#welcome","Report the issue"],emergency:["#emergency","Open Emergency help"],lease:["#lease","See my lease"],whofixes:["#responsibility","Open Who fixes this?"]};
+  const act=m.action&&actMap[m.action]?`<br><a class="act-link" href="${actMap[m.action][0]}">${actMap[m.action][1]} \u2192</a>`:"";
+  return `<div class="bub ${m.who==="me"?"me":"ai"}${m.err?" err":""}">${esc(m.text)}${act}</div>`;
+}
+function renderAsk(){
+  let html=`<div class="hero" style="margin-bottom:4px"><h1 style="font-size:23px">Ask us anything</h1>
+    <div class="small muted sub">Instant answers about your home, lease, and who fixes what. It can make mistakes - your signed lease controls. In an emergency, <a href="#emergency">get help here</a>.</div></div>`;
+  if(!assistantEnabled()){
+    html+=`<div class="card" style="margin-top:16px">
+      <div class="rr-k" style="color:var(--accent-d)">Almost ready</div>
+      <div class="small" style="margin-top:8px;line-height:1.5">The concierge isn't switched on yet. In the meantime, we answer every message at the monitored inbox, and Joe is one call away for anything urgent.</div>
+      <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
+        <a class="btn sm" href="mailto:${OFFICIAL.inbox}">\u2709\uFE0F Email us</a>
+        <a class="btn sm" href="${telHref(OFFICIAL.pm.phone)}">\u{1F4DE} Call Joe</a>
+      </div></div>`;
+    app.innerHTML=html; return;
+  }
+  html+=`<div class="chat" id="chat">${CHATLOG.map(bubbleHtml).join("")}</div>`;
+  if(!CHATLOG.length){
+    html+=`<div class="chips">${STARTERS.map((q,i)=>`<button class="chipq" data-q="${i}">${esc(q)}</button>`).join("")}</div>`;
+  }
+  app.innerHTML=html;
+  document.body.style.paddingBottom="110px";
+  document.getElementById("actionbar-slot").innerHTML=`<div class="actionbar"><div class="wrap">
+    <input class="inp" id="ask-in" placeholder="Ask about your home\u2026" autocomplete="off" style="flex:1;min-height:54px">
+    <button class="btn primary" id="ask-send" style="flex:0 0 92px" ${ASK_PENDING?"disabled":""}>Send</button></div></div>`;
+  const send=()=>{ const v=($("#ask-in").value||"").trim(); if(v) sendAsk(v); };
+  $("#ask-send").addEventListener("click",send);
+  $("#ask-in").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); send(); } });
+  document.querySelectorAll("[data-q]").forEach(b=>b.addEventListener("click",()=>sendAsk(STARTERS[+b.dataset.q])));
+  window.scrollTo(0,document.body.scrollHeight);
+}
+async function sendAsk(text){
+  if(ASK_PENDING) return;
+  ASK_PENDING=true;
+  CHATLOG.push({who:"me",text});
+  CHAT.push({role:"user",content:text});
+  const chat=$("#chat"); if(chat){ chat.insertAdjacentHTML("beforeend",bubbleHtml({who:"me",text})); }
+  const chips=document.querySelector(".chips"); if(chips) chips.remove();
+  const inp=$("#ask-in"); if(inp){ inp.value=""; }
+  const btn=$("#ask-send"); if(btn) btn.disabled=true;
+  if(chat) chat.insertAdjacentHTML("beforeend",`<div class="bub ai typing" id="typing"><i></i><i></i><i></i></div>`);
+  window.scrollTo(0,document.body.scrollHeight);
+  try{
+    const r=await askClaude();
+    if(r.raw) CHAT.push({role:"assistant",content:r.raw});
+    CHATLOG.push({who:"ai",text:r.text,action:r.action});
+    const t=$("#typing"); if(t) t.outerHTML=bubbleHtml({who:"ai",text:r.text,action:r.action});
+  }catch(e){
+    CHAT.pop(); // let them retry without a dangling turn
+    const msg="I couldn't reach the assistant just now. For anything urgent, call Joe at "+OFFICIAL.pm.phone+", or email "+OFFICIAL.inbox+".";
+    CHATLOG.push({who:"ai",text:msg,err:true});
+    const t=$("#typing"); if(t) t.outerHTML=bubbleHtml({who:"ai",text:msg,err:true});
+  }
+  ASK_PENDING=false;
+  const btn2=$("#ask-send"); if(btn2) btn2.disabled=false;
+  const inp2=$("#ask-in"); if(inp2) inp2.focus();
+  window.scrollTo(0,document.body.scrollHeight);
+}
 
 /* ============================================================================
    LEASE & UTILITIES (per unit)
