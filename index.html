@@ -423,6 +423,26 @@ html{background:var(--paper)} body{background:transparent}
 .steps li.now::before{border-color:var(--accent);color:var(--accent-d);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 16%,transparent)}
 .steps li.todo{opacity:.55}
 @media (prefers-reduced-motion:reduce){.bub.typing i{animation:none}}
+
+/* ============================================================================
+   GATE — cinematic title-card entrance, rotating tagline, autofill-first form
+   ========================================================================== */
+.gate-hero h1 .w{display:inline-block;opacity:0;animation:wordRise .7s cubic-bezier(.2,.8,.2,1) both}
+.gate-hero h1 .w1{animation-delay:.05s}.gate-hero h1 .w2{animation-delay:.18s}
+.gate-hero h1 .w3{animation:wordRise .7s cubic-bezier(.2,.8,.2,1) .32s both, wavePop .9s ease 1s}
+@keyframes wordRise{from{opacity:0;transform:translateY(24px) rotate(1.5deg)}to{opacity:1;transform:none}}
+@keyframes wavePop{0%,100%{transform:rotate(0)}30%{transform:rotate(14deg)}60%{transform:rotate(-8deg)}}
+.g-in{opacity:0;animation:riseChild .6s cubic-bezier(.2,.8,.2,1) both}
+.g2{animation-delay:.35s}.g3{animation-delay:.5s}.g4{animation-delay:.65s}.g5{animation-delay:.85s}.g6{animation-delay:1s}
+.rot{display:inline-grid;vertical-align:bottom}
+.rot span{grid-area:1/1;opacity:0;animation:rotFade 10.5s ease-in-out infinite;font-weight:600;color:var(--accent-d);white-space:nowrap}
+.rot span:nth-child(2){animation-delay:3.5s}.rot span:nth-child(3){animation-delay:7s}
+@keyframes rotFade{0%{opacity:0;transform:translateY(9px)}4%,29%{opacity:1;transform:none}33%,100%{opacity:0;transform:translateY(-9px)}}
+.gate-card .inp:focus{border-color:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 14%,transparent)}
+@media (prefers-reduced-motion:reduce){
+  .gate-hero h1 .w,.g-in{animation:none!important;opacity:1!important}
+  .rot span{animation:none}.rot span:nth-child(n+2){display:none}.rot span:first-child{opacity:1}
+}
 </style>
 </head>
 <body>
@@ -945,24 +965,31 @@ function route(){
    ========================================================================== */
 function renderGate(){
   const r=RESIDENT||{name:"",propertyText:"",unit:""};
-  let html=`<div class="hero"><h1>Welcome home 👋</h1>
-    <div class="q2">Let's get you set up</div>
-    <div class="small muted sub">Enter your details to open your resident portal. We'll tailor everything to your home: utilities, rules, and who to call.</div></div>
-    <div class="card" style="margin-top:16px">
-      <label class="field" style="margin-top:0">Your name</label>
-      <input class="inp" id="g-name" value="${esc(r.name)}" placeholder="First and last name" autocomplete="name">
-      <label class="field">Property address</label>
-      <input class="inp" id="g-prop" value="${esc(r.propertyText)}" placeholder="e.g. 640 Hamilton Ave" autocomplete="street-address">
-      <label class="field">Unit / bedroom <span class="muted">(if applicable)</span></label>
-      <input class="inp" id="g-unit" value="${esc(r.unit)}" placeholder="e.g. Bedroom 2, Unit A">
-      <div id="g-err" class="small" style="color:var(--emergency);min-height:18px;margin:8px 0 0;line-height:1.4"></div>
+  // A real <form> (with standard autocomplete tokens and a submit button bound
+  // via the form attribute) is what makes browsers reliably offer autofill for
+  // name and address - and offer to save them after the first visit. We
+  // deliberately do NOT suggest addresses from our own records: residents
+  // shouldn't see the rest of the portfolio.
+  let html=`<div class="hero gate-hero">
+      <h1><span class="w w1">Welcome</span> <span class="w w2">home</span> <span class="w w3">\u{1F44B}</span></h1>
+      <div class="q2 g-in g2">Let's get you set up</div>
+      <div class="small muted sub g-in g3">Inside your portal:&nbsp;<span class="rot"><span>who fixes what, with DIY tips</span><span>instant answers, day or night</span><span>one-tap emergency help</span></span></div>
     </div>
-    <div class="small muted" style="margin:2px 2px 0">Your details are stored only on this device. Access is limited to residents named on the lease.</div>
-    <div style="text-align:center;margin-top:18px"><a class="linkbtn" href="#emergency" style="color:var(--emergency)">🚨 In an emergency? Get help now →</a></div>`;
+    <form id="g-form" autocomplete="on" class="card gate-card g-in g4" style="margin-top:16px">
+      <label class="field" style="margin-top:0" for="g-name">Your name</label>
+      <input class="inp" id="g-name" name="name" value="${esc(r.name)}" placeholder="First and last name" autocomplete="name" autocapitalize="words" enterkeyhint="next">
+      <label class="field" for="g-prop">Property address</label>
+      <input class="inp" id="g-prop" name="address-line1" value="${esc(r.propertyText)}" placeholder="e.g. 640 Hamilton Ave" autocomplete="address-line1" enterkeyhint="next">
+      <label class="field" for="g-unit">Unit / bedroom <span class="muted">(if applicable)</span></label>
+      <input class="inp" id="g-unit" name="address-line2" value="${esc(r.unit)}" placeholder="e.g. Bedroom 2, Unit A" autocomplete="address-line2" enterkeyhint="go">
+      <div id="g-err" class="small" style="color:var(--emergency);min-height:18px;margin:8px 0 0;line-height:1.4"></div>
+    </form>
+    <div class="small muted g-in g5" style="margin:2px 2px 0">Your details are stored only on this device. Access is limited to residents named on the lease.</div>
+    <div class="g-in g6" style="text-align:center;margin-top:18px"><a class="linkbtn" href="#emergency" style="color:var(--emergency)">\u{1F6A8} In an emergency? Get help now \u2192</a></div>`;
   app.innerHTML=html;
   document.body.style.paddingBottom="100px";
   document.getElementById("actionbar-slot").innerHTML=`<div class="actionbar"><div class="wrap">
-    <button class="btn primary block" id="g-go">Enter my portal →</button></div></div>`;
+    <button class="btn primary block" id="g-go" type="submit" form="g-form">Enter my portal \u2192</button></div></div>`;
   const submit=()=>{
     const name=($("#g-name").value||"").trim();
     const propertyText=($("#g-prop").value||"").trim();
@@ -980,8 +1007,10 @@ function renderGate(){
     currentProperty=v.propId;
     navigate("#home");
   };
-  $("#g-go").addEventListener("click",submit);
-  ["g-name","g-prop","g-unit"].forEach(id=>$("#"+id).addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); submit(); } }));
+  // One path only: the native form submission (Enter in any field, or the
+  // action-bar button bound via form=). No separate click handler - that
+  // would double-fire.
+  document.getElementById("g-form").addEventListener("submit",e=>{ e.preventDefault(); submit(); });
 }
 /* Static "your home" bar — no browsing other properties. */
 function renderWorkbar(){
