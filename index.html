@@ -690,13 +690,16 @@ const EMERGENCY_VENDORS = {
     { trade:"Plumber", name:"Joe Catino (Property Manager)", phone:"(617) 633-8949" },
     { trade:"Electrician", name:"XAE Electrical", phone:"(404) 825-6541" },
     { trade:"HVAC", name:"Bradshaw HVAC", phone:"(615) 642-6529" },
+    { trade:"Locksmith · 24/7", name:"Pop-A-Lock Nashville", phone:"(615) 255-6736" },
     { trade:"Garage door", name:"Allied Overhead Door", phone:"(615) 237-7724" },
     { trade:"Pest control", name:"Discovery Pest Solutions", phone:"(615) 663-0193" }
   ],
   franklin:[
     { trade:"Plumber", name:"Manuel Velasquez", phone:"(615) 498-9911" },
     { trade:"Plumber (backup)", name:"Precision Plumbing", phone:"(615) 876-8603" },
+    { trade:"HVAC", name:"Anderson Air of Franklin", phone:"(615) 285-9222" },
     { trade:"Electrician", name:"XAE Electrical", phone:"(404) 825-6541" },
+    { trade:"Locksmith · 24/7", name:"Pop-A-Lock Nashville", phone:"(615) 255-6736" },
     { trade:"Septic", name:"Outright Septic", phone:"(615) 558-8144" },
     { trade:"Pest control", name:"Discovery Pest Solutions", phone:"(615) 663-0193" }
   ]
@@ -742,7 +745,7 @@ const RESP = [
     diy:["Try a cup plunger first for a single slow sink, tub, or toilet.","Never pour grease down the drain; keep wipes, hair, and food out.","If several fixtures back up at once, that's a line issue, so report it right away."] },
   { id:"appliances", name:"Appliances", icon:"🧺", verdict:"shared", report:"appliances",
     tenant:"Normal cleaning and proper use.", landlord:"Repair and replacement.",
-    diy:["Clean the dryer lint trap every load and wipe fridge/oven seals.","If an appliance stops working, report it, and repair/replacement is ours."] },
+    diy:["Clean the dryer lint trap every load and wipe fridge/oven seals.","If an appliance stops working, report it, and repair/replacement is ours. Once approved, we dispatch Bodewell, GE's factory service, and most repairs are done on the first visit."] },
   { id:"light-bulbs", name:"Light bulbs", icon:"💡", verdict:"tenant", report:"electrical",
     tenant:"Replace consumable bulbs.", landlord:"Fixture repair/replacement.",
     diy:["Match the base and don't exceed the fixture's max wattage.","If the fixture itself is broken, flickers with a good bulb, or sparks, report it (and treat sparks as an emergency)."] },
@@ -1886,7 +1889,7 @@ function renderEmergency(){
       ${p.gas?`<li style="margin-bottom:8px"><b>Gas smell:</b> leave the home, then call ${esc(OFFICIAL.gasEmergency.name)} at <a href="${telHref(OFFICIAL.gasEmergency.phone)}">${esc(OFFICIAL.gasEmergency.phone)}</a> (or 911), then submit a request.</li>`:`<li style="margin-bottom:8px"><b>Gas smell:</b> leave the home and call 911 or your gas provider's emergency line, then submit a request.</li>`}
       <li style="margin-bottom:8px"><b>Electrical hazard, sparking, or burning smell:</b> cut power at the breaker if safe, call the electrician below, then submit a request.</li>
       <li style="margin-bottom:8px"><b>Sewage backup:</b> stop using water, keep the area clear, call the plumber/septic vendor, then submit a request.</li>
-      <li><b>Lockout:</b> if you can't reach us, you may call a licensed locksmith. We reimburse reasonable, non-tenant-caused lockout costs if you tell us within 24 hours.</li>
+      <li><b>Lockout:</b> call Pop-A-Lock Nashville, our approved 24/7 locksmith, at <a href="tel:+16152556736">(615) 255-6736</a>. We reimburse reasonable, non-tenant-caused lockout costs if you tell us within 24 hours.</li>
     </ul></div>
 
     <div class="sec"><h2>Approved emergency contacts</h2></div>
